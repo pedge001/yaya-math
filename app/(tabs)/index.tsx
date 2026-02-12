@@ -134,6 +134,25 @@ export default function OperationSelectionScreen() {
               </Text>
             </View>
           </TouchableOpacity>
+
+          {/* Statistics Button */}
+          <TouchableOpacity
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                playSound("buttonPress");
+              }
+              router.push("/statistics");
+            }}
+            className="mt-2"
+          >
+            <View className="flex-row items-center justify-center gap-2">
+              <Text className="text-lg">📊</Text>
+              <Text className="text-base font-semibold" style={{ color: colors.primary }}>
+                Statistics
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Daily Challenge Button */}

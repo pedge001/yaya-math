@@ -11,6 +11,7 @@ import { playSound } from "@/lib/sound-manager";
 import { checkAndUpdatePersonalBest } from "@/lib/personal-best-tracker";
 import { updateAchievementProgress } from "@/lib/achievements";
 import { getStreakData } from "@/lib/streak-tracker";
+import { saveSession } from "@/lib/statistics-tracker";
 
 export default function ResultsScreen() {
   const params = useLocalSearchParams();
@@ -41,6 +42,9 @@ export default function ResultsScreen() {
     checkAndUpdatePersonalBest(firstOperation, correct, isSpeedMode, completionTime).then((isNewBest) => {
       setIsPersonalBest(isNewBest);
     });
+
+    // Save session statistics
+    saveSession(firstOperation, total, correct, isSpeedMode ? completionTime : undefined, isSpeedMode);
 
     // Update achievements
     const isPerfect = correct === total;

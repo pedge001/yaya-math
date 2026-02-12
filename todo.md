@@ -60,3 +60,14 @@
 - [ ] Add badge unlock notifications with animations
 - [x] Test personal best tracking
 - [x] Test achievements system
+- [x] Create statistics tracking utility with AsyncStorage
+- [x] Track session history (date, operation, score, time, accuracy)
+- [x] Calculate accuracy rates per operation
+- [x] Calculate average completion times per operation
+- [x] Calculate improvement trends over time
+- [x] Create statistics dashboard screen with charts
+- [x] Add chart for accuracy rates by operation
+- [x] Add chart for average completion times
+- [x] Add chart for improvement trends over past 7/30 days
+- [x] Add statistics link to home screen
+- [x] Test statistics tracking and dashboard
