@@ -28,11 +28,11 @@ const schemeFromBundleId = `manus${timestamp}`;
 
 const env = {
   // App branding - update these values directly (do not use env vars)
-  appName: "Math Practice App",
+  appName: "Math Practice",
   appSlug: "math-practice-app",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "",
+  logoUrl: "https://private-us-east-1.manuscdn.com/sessionFile/OXgP9nBndgkiqVvI86V5RE/sandbox/CS5eNYHfFMOOiLJdKJ2XZo-img-1_1770863152000_na1fn_bWF0aC1wcmFjdGljZS1sb2dv.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvT1hnUDluQm5kZ2tpcVZ2STg2VjVSRS9zYW5kYm94L0NTNWVOWUhmRk1PT2lMSmRLSjJYWm8taW1nLTFfMTc3MDg2MzE1MjAwMF9uYTFmbl9iV0YwYUMxd2NtRmpkR2xqWlMxc2IyZHYucG5nP3gtb3NzLXByb2Nlc3M9aW1hZ2UvcmVzaXplLHdfMTkyMCxoXzE5MjAvZm9ybWF0LHdlYnAvcXVhbGl0eSxxXzgwIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=go9x-It5GwKkzdWYGmqZYMo-Dogzh~B7VXAFpKRSTyoZQcTpCm1-B7~s1GIYVY87xeuVtEQH2k86tWbzDilu88Er60ygzAUTLcjtAnNYy0ta~06-cuLB-X-ReynQA0Dy99JtexX8PzTBV7pmvR6LdnqLE9uxDHneAwoXjoHKUJ13iltMeTLJ3yngconWQlsx8GMaT5nQiJRE5r8C2Av9EJt1IUPsV0y7axKdRLLLN~hkHhdZ8lb7sKOoI-EUFcDi5rdpCXs60gJBOy3Cvq4zC0oTf-jMB4NDBvl0BENp8~bhFHhAftNKgC~qHOsn4wa1fnrdPe8pj1G7G25ZvC-Zqg__",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
