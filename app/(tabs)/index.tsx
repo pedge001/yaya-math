@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Text, View, TouchableOpacity, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
+import { getStreakData, getStreakBadge, getStreakMessage, type StreakData } from "@/lib/streak-tracker";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 
@@ -23,8 +24,19 @@ const operations: OperationCard[] = [
 
 export default function OperationSelectionScreen() {
   const [selectedOperations, setSelectedOperations] = useState<Set<Operation>>(new Set());
+  const [isSpeedMode, setIsSpeedMode] = useState(false);
+  const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastPracticeDate: "", longestStreak: 0 });
   const colors = useColors();
   const router = useRouter();
+
+  useEffect(() => {
+    loadStreakData();
+  }, []);
+
+  const loadStreakData = async () => {
+    const data = await getStreakData();
+    setStreakData(data);
+  };
 
   const toggleOperation = (operation: Operation) => {
     if (Platform.OS !== "web") {
@@ -53,12 +65,18 @@ export default function OperationSelectionScreen() {
   };
 
   const startPractice = () => {
-    if (selectedOperations.size === 0) return;
+    if (Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    const operationsParam = Array.from(selectedOperations).join(",");
+    router.push(`/practice?operations=${operationsParam}&speedMode=${isSpeedMode}`);
+  };
+
+  const toggleSpeedMode = () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    const operationsParam = Array.from(selectedOperations).join(",");
-    router.push(`/practice?operations=${operationsParam}`);
+    setIsSpeedMode(!isSpeedMode);
   };
 
   const allSelected = selectedOperations.size === operations.length;
@@ -70,6 +88,42 @@ export default function OperationSelectionScreen() {
         <View className="items-center pt-8">
           <Text className="text-4xl font-bold text-foreground mb-2">Math Practice</Text>
           <Text className="text-base text-muted">Choose operations to practice</Text>
+          
+          {/* Streak Badge */}
+          {streakData.currentStreak > 0 && (
+            <View className="mt-4 px-6 py-3 rounded-full border-2" style={{ borderColor: colors.primary, backgroundColor: "rgba(182, 255, 251, 0.1)" }}>
+              <View className="flex-row items-center gap-2">
+                <Text className="text-2xl">{getStreakBadge(streakData.currentStreak)}</Text>
+                <Text className="text-lg font-bold" style={{ color: colors.primary }}>
+                  {streakData.currentStreak} Day Streak!
+                </Text>
+              </View>
+              <Text className="text-xs text-center text-muted mt-1">
+                {getStreakMessage(streakData.currentStreak)}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Daily Challenge Button */}
+        <View className="items-center mt-4">
+          <TouchableOpacity
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }
+              router.push("/daily-challenge");
+            }}
+            className="py-3 px-6 rounded-full border-2"
+            style={{
+              borderColor: colors.primary,
+              backgroundColor: "rgba(182, 255, 251, 0.1)",
+            }}
+          >
+            <Text className="text-lg font-bold" style={{ color: colors.primary }}>
+              🌟 Today's Challenge
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Operation Cards Grid */}
@@ -124,8 +178,28 @@ export default function OperationSelectionScreen() {
           </View>
         </View>
 
-        {/* Leaderboard Link */}
+        {/* Speed Mode Toggle */}
         <View className="items-center mb-4">
+          <TouchableOpacity
+            onPress={toggleSpeedMode}
+            className="flex-row items-center gap-2 py-3 px-6 rounded-full border-2"
+            style={{
+              borderColor: isSpeedMode ? colors.primary : "rgba(182, 255, 251, 0.3)",
+              backgroundColor: isSpeedMode ? "rgba(182, 255, 251, 0.1)" : "transparent",
+            }}
+          >
+            <Text className="text-2xl">⚡</Text>
+            <Text
+              className="text-base font-semibold"
+              style={{ color: isSpeedMode ? colors.primary : colors.muted }}
+            >
+              Speed Mode {isSpeedMode ? "ON" : "OFF"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Leaderboard Links */}
+        <View className="items-center mb-4 gap-2">
           <TouchableOpacity
             onPress={() => {
               if (Platform.OS !== "web") {
@@ -139,6 +213,21 @@ export default function OperationSelectionScreen() {
               style={{ color: colors.primary }}
             >
               🏆 View Leaderboard
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              router.push("/speed-leaderboard");
+            }}
+          >
+            <Text
+              className="text-base font-semibold underline"
+              style={{ color: colors.primary }}
+            >
+              ⚡ Speed Leaderboard
             </Text>
           </TouchableOpacity>
         </View>

@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertLeaderboardEntry, InsertUser, leaderboard, users } from "../drizzle/schema";
+import { dailyChallengeLeaderboard, InsertDailyChallengeEntry, InsertLeaderboardEntry, InsertSpeedLeaderboardEntry, InsertUser, leaderboard, speedLeaderboard, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -132,6 +132,97 @@ export async function addLeaderboardEntry(entry: InsertLeaderboardEntry) {
     return { success: true };
   } catch (error) {
     console.error("[Database] Failed to add leaderboard entry:", error);
+    return { success: false, error: "Failed to add entry" };
+  }
+}
+
+/**
+ * Get top 10 speed leaderboard entries ordered by completion time (ascending)
+ * @param operation - Optional filter by operation type
+ */
+export async function getTop10SpeedLeaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division") {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get speed leaderboard: database not available");
+    return [];
+  }
+
+  try {
+    let query = db.select().from(speedLeaderboard);
+    
+    if (operation) {
+      query = query.where(eq(speedLeaderboard.operation, operation)) as any;
+    }
+    
+    const results = await query
+      .orderBy(speedLeaderboard.completionTime, speedLeaderboard.createdAt)
+      .limit(10);
+    return results;
+  } catch (error) {
+    console.error("[Database] Failed to get speed leaderboard:", error);
+    return [];
+  }
+}
+
+/**
+ * Add a new speed leaderboard entry
+ */
+export async function addSpeedLeaderboardEntry(entry: InsertSpeedLeaderboardEntry) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add speed leaderboard entry: database not available");
+    return { success: false, error: "Database not available" };
+  }
+
+  try {
+    await db.insert(speedLeaderboard).values(entry);
+    return { success: true };
+  } catch (error) {
+    console.error("[Database] Failed to add speed leaderboard entry:", error);
+    return { success: false, error: "Failed to add entry" };
+  }
+}
+
+/**
+ * Get today's daily challenge leaderboard (top 10)
+ */
+export async function getTodaysDailyChallengeLeaderboard() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get daily challenge leaderboard: database not available");
+    return [];
+  }
+
+  try {
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const results = await db
+      .select()
+      .from(dailyChallengeLeaderboard)
+      .where(eq(dailyChallengeLeaderboard.challengeDate, today))
+      .orderBy(desc(dailyChallengeLeaderboard.score), dailyChallengeLeaderboard.createdAt)
+      .limit(10);
+    return results;
+  } catch (error) {
+    console.error("[Database] Failed to get daily challenge leaderboard:", error);
+    return [];
+  }
+}
+
+/**
+ * Add a new daily challenge entry
+ */
+export async function addDailyChallengeEntry(entry: InsertDailyChallengeEntry) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add daily challenge entry: database not available");
+    return { success: false, error: "Database not available" };
+  }
+
+  try {
+    await db.insert(dailyChallengeLeaderboard).values(entry);
+    return { success: true };
+  } catch (error) {
+    console.error("[Database] Failed to add daily challenge entry:", error);
     return { success: false, error: "Failed to add entry" };
   }
 }

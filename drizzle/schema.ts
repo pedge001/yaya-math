@@ -40,3 +40,33 @@ export const leaderboard = mysqlTable("leaderboard", {
 
 export type LeaderboardEntry = typeof leaderboard.$inferSelect;
 export type InsertLeaderboardEntry = typeof leaderboard.$inferInsert;
+
+/**
+ * Speed mode leaderboard for tracking fastest completion times.
+ */
+export const speedLeaderboard = mysqlTable("speed_leaderboard", {
+  id: int("id").autoincrement().primaryKey(),
+  initials: varchar("initials", { length: 3 }).notNull(),
+  completionTime: int("completionTime").notNull(), // Time in seconds
+  totalProblems: int("totalProblems").notNull(),
+  operation: mysqlEnum("operation", ["addition", "subtraction", "multiplication", "division"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SpeedLeaderboardEntry = typeof speedLeaderboard.$inferSelect;
+export type InsertSpeedLeaderboardEntry = typeof speedLeaderboard.$inferInsert;
+
+/**
+ * Daily challenge leaderboard - resets every 24 hours.
+ */
+export const dailyChallengeLeaderboard = mysqlTable("daily_challenge_leaderboard", {
+  id: int("id").autoincrement().primaryKey(),
+  initials: varchar("initials", { length: 3 }).notNull(),
+  score: int("score").notNull(),
+  totalProblems: int("totalProblems").notNull(),
+  challengeDate: varchar("challengeDate", { length: 10 }).notNull(), // YYYY-MM-DD format
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DailyChallengeEntry = typeof dailyChallengeLeaderboard.$inferSelect;
+export type InsertDailyChallengeEntry = typeof dailyChallengeLeaderboard.$inferInsert;

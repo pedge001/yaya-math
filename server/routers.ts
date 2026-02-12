@@ -42,6 +42,48 @@ export const appRouter = router({
         return await db.addLeaderboardEntry(input);
       }),
   }),
+
+  speedLeaderboard: router({
+    getTop10: publicProcedure
+      .input(
+        z.object({
+          operation: z.enum(["addition", "subtraction", "multiplication", "division"]).optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return await db.getTop10SpeedLeaderboard(input.operation);
+      }),
+    submitTime: publicProcedure
+      .input(
+        z.object({
+          initials: z.string().length(3).toUpperCase(),
+          completionTime: z.number().int().min(1),
+          totalProblems: z.number().int().min(1),
+          operation: z.enum(["addition", "subtraction", "multiplication", "division"]),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return await db.addSpeedLeaderboardEntry(input);
+      }),
+  }),
+
+  dailyChallenge: router({
+    getTodaysLeaderboard: publicProcedure.query(async () => {
+      return await db.getTodaysDailyChallengeLeaderboard();
+    }),
+    submitScore: publicProcedure
+      .input(
+        z.object({
+          initials: z.string().length(3).toUpperCase(),
+          score: z.number().int().min(0).max(20),
+          totalProblems: z.number().int().min(1),
+          challengeDate: z.string().length(10), // YYYY-MM-DD
+        })
+      )
+      .mutation(async ({ input }) => {
+        return await db.addDailyChallengeEntry(input);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

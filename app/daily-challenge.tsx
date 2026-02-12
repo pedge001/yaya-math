@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { Text, View, TouchableOpacity, Platform } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSequence,
   withTiming,
-  withSpring,
 } from "react-native-reanimated";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -22,36 +21,50 @@ interface Problem {
   answer: number;
 }
 
-const TOTAL_PROBLEMS = 50;
+const TOTAL_PROBLEMS = 20; // Daily challenge is 20 problems
 
-function generateProblem(operations: Operation[]): Problem {
-  const operation = operations[Math.floor(Math.random() * operations.length)];
-  let num1: number, num2: number, answer: number;
+function generateDailyProblems(seed: string): Problem[] {
+  // Use date as seed for consistent daily problems
+  const seedNum = seed.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const rng = (index: number) => {
+    const x = Math.sin(seedNum + index) * 10000;
+    return x - Math.floor(x);
+  };
 
-  switch (operation) {
-    case "addition":
-      num1 = Math.floor(Math.random() * 99) + 1;
-      num2 = Math.floor(Math.random() * 99) + 1;
-      answer = num1 + num2;
-      break;
-    case "subtraction":
-      num1 = Math.floor(Math.random() * 99) + 1;
-      num2 = Math.floor(Math.random() * num1) + 1;
-      answer = num1 - num2;
-      break;
-    case "multiplication":
-      num1 = Math.floor(Math.random() * 10) + 1;
-      num2 = Math.floor(Math.random() * 10) + 1;
-      answer = num1 * num2;
-      break;
-    case "division":
-      num2 = Math.floor(Math.random() * 10) + 1;
-      answer = Math.floor(Math.random() * 10) + 1;
-      num1 = num2 * answer;
-      break;
+  const problems: Problem[] = [];
+  const operations: Operation[] = ["addition", "subtraction", "multiplication", "division"];
+
+  for (let i = 0; i < TOTAL_PROBLEMS; i++) {
+    const operation = operations[Math.floor(rng(i * 4) * operations.length)];
+    let num1: number, num2: number, answer: number;
+
+    switch (operation) {
+      case "addition":
+        num1 = Math.floor(rng(i * 4 + 1) * 50) + 1;
+        num2 = Math.floor(rng(i * 4 + 2) * 50) + 1;
+        answer = num1 + num2;
+        break;
+      case "subtraction":
+        num1 = Math.floor(rng(i * 4 + 1) * 50) + 1;
+        num2 = Math.floor(rng(i * 4 + 2) * num1) + 1;
+        answer = num1 - num2;
+        break;
+      case "multiplication":
+        num1 = Math.floor(rng(i * 4 + 1) * 10) + 1;
+        num2 = Math.floor(rng(i * 4 + 2) * 10) + 1;
+        answer = num1 * num2;
+        break;
+      case "division":
+        num2 = Math.floor(rng(i * 4 + 1) * 10) + 1;
+        answer = Math.floor(rng(i * 4 + 2) * 10) + 1;
+        num1 = num2 * answer;
+        break;
+    }
+
+    problems.push({ num1, num2, operation, answer });
   }
 
-  return { num1, num2, operation, answer };
+  return problems;
 }
 
 function getOperationSymbol(operation: Operation): string {
@@ -67,42 +80,18 @@ function getOperationSymbol(operation: Operation): string {
   }
 }
 
-export default function PracticeScreen() {
-  const params = useLocalSearchParams();
+export default function DailyChallengeScreen() {
   const router = useRouter();
   const colors = useColors();
 
-  const operations = (params.operations as string)?.split(",") as Operation[];
-  const isSpeedMode = params.speedMode === "true";
-
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const [problems] = useState<Problem[]>(generateDailyProblems(today));
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
-  const [problems, setProblems] = useState<Problem[]>([]);
   const [userAnswer, setUserAnswer] = useState("");
   const [correctCount, setCorrectCount] = useState(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [startTime] = useState(Date.now());
 
   const backgroundColor = useSharedValue(colors.surface);
   const scale = useSharedValue(1);
-
-  useEffect(() => {
-    const generatedProblems: Problem[] = [];
-    for (let i = 0; i < TOTAL_PROBLEMS; i++) {
-      generatedProblems.push(generateProblem(operations));
-    }
-    setProblems(generatedProblems);
-  }, []);
-
-  // Timer for speed mode
-  useEffect(() => {
-    if (!isSpeedMode) return;
-
-    const interval = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isSpeedMode, startTime]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     backgroundColor: backgroundColor.value,
@@ -135,49 +124,38 @@ export default function PracticeScreen() {
       );
     }
 
-    if (isCorrect) {
-      backgroundColor.value = withSequence(
-        withTiming(colors.success, { duration: 200 }),
-        withTiming(colors.surface, { duration: 300 })
-      );
-      scale.value = withSequence(withSpring(1.05), withSpring(1));
-      setCorrectCount((prev) => prev + 1);
-    } else {
-      backgroundColor.value = withSequence(
-        withTiming(colors.error, { duration: 200 }),
-        withTiming(colors.surface, { duration: 300 })
-      );
-      scale.value = withSequence(
-        withTiming(0.98, { duration: 50 }),
-        withTiming(1.02, { duration: 50 }),
-        withTiming(0.98, { duration: 50 }),
-        withTiming(1, { duration: 50 })
-      );
-    }
+    // Animate feedback
+    backgroundColor.value = withSequence(
+      withTiming(isCorrect ? "#22C55E" : "#EF4444", { duration: 200 }),
+      withTiming(colors.surface, { duration: 300 })
+    );
+
+    scale.value = withSequence(withTiming(1.05, { duration: 100 }), withTiming(1, { duration: 100 }));
 
     setTimeout(() => {
       if (currentProblemIndex + 1 >= TOTAL_PROBLEMS) {
-        const finalTime = Math.floor((Date.now() - startTime) / 1000);
         router.push({
-          pathname: "/results",
+          pathname: "/daily-challenge-results",
           params: {
             correct: correctCount + (isCorrect ? 1 : 0),
             total: TOTAL_PROBLEMS,
-            operations: operations.join(","),
-            speedMode: String(isSpeedMode),
-            completionTime: String(finalTime),
+            challengeDate: today,
           },
         });
       } else {
         setCurrentProblemIndex((prev) => prev + 1);
         setUserAnswer("");
       }
+
+      if (isCorrect) {
+        setCorrectCount((prev) => prev + 1);
+      }
     }, 500);
   };
 
   if (problems.length === 0) {
     return (
-      <ScreenContainer className="items-center justify-center">
+      <ScreenContainer className="p-6">
         <Text className="text-xl text-muted">Loading...</Text>
       </ScreenContainer>
     );
@@ -188,15 +166,13 @@ export default function PracticeScreen() {
   return (
     <ScreenContainer className="p-6">
       <View className="flex-1">
-        {/* Timer (Speed Mode) */}
-        {isSpeedMode && (
-          <View className="items-center mb-4">
-            <Text className="text-sm text-muted">TIME</Text>
-            <Text className="text-3xl font-bold" style={{ color: colors.primary }}>
-              {Math.floor(elapsedTime / 60)}:{String(elapsedTime % 60).padStart(2, "0")}
-            </Text>
-          </View>
-        )}
+        {/* Header */}
+        <View className="items-center mb-4">
+          <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
+            🌟 DAILY CHALLENGE 🌟
+          </Text>
+          <Text className="text-sm text-muted">{today}</Text>
+        </View>
 
         {/* Progress and Score */}
         <View className="flex-row justify-between items-center mb-8">
@@ -230,10 +206,10 @@ export default function PracticeScreen() {
               <TouchableOpacity
                 key={num}
                 onPress={() => handleNumberPress(num.toString())}
-                className="flex-1 aspect-square bg-surface rounded-2xl items-center justify-center"
+                className="flex-1 py-6 rounded-2xl items-center justify-center"
                 style={{ backgroundColor: colors.surface }}
               >
-                <Text className="text-3xl font-semibold text-foreground">{num}</Text>
+                <Text className="text-3xl font-bold text-foreground">{num}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -242,10 +218,10 @@ export default function PracticeScreen() {
               <TouchableOpacity
                 key={num}
                 onPress={() => handleNumberPress(num.toString())}
-                className="flex-1 aspect-square bg-surface rounded-2xl items-center justify-center"
+                className="flex-1 py-6 rounded-2xl items-center justify-center"
                 style={{ backgroundColor: colors.surface }}
               >
-                <Text className="text-3xl font-semibold text-foreground">{num}</Text>
+                <Text className="text-3xl font-bold text-foreground">{num}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -254,38 +230,35 @@ export default function PracticeScreen() {
               <TouchableOpacity
                 key={num}
                 onPress={() => handleNumberPress(num.toString())}
-                className="flex-1 aspect-square bg-surface rounded-2xl items-center justify-center"
+                className="flex-1 py-6 rounded-2xl items-center justify-center"
                 style={{ backgroundColor: colors.surface }}
               >
-                <Text className="text-3xl font-semibold text-foreground">{num}</Text>
+                <Text className="text-3xl font-bold text-foreground">{num}</Text>
               </TouchableOpacity>
             ))}
           </View>
           <View className="flex-row gap-3">
             <TouchableOpacity
               onPress={handleBackspace}
-              className="flex-1 aspect-square bg-surface rounded-2xl items-center justify-center"
+              className="flex-1 py-6 rounded-2xl items-center justify-center"
               style={{ backgroundColor: colors.surface }}
             >
-              <Text className="text-2xl font-semibold text-foreground">←</Text>
+              <Text className="text-2xl font-bold text-foreground">⌫</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleNumberPress("0")}
-              className="flex-1 aspect-square bg-surface rounded-2xl items-center justify-center"
+              className="flex-1 py-6 rounded-2xl items-center justify-center"
               style={{ backgroundColor: colors.surface }}
             >
-              <Text className="text-3xl font-semibold text-foreground">0</Text>
+              <Text className="text-3xl font-bold text-foreground">0</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSubmit}
+              className="flex-1 py-6 rounded-2xl items-center justify-center"
+              style={{ backgroundColor: colors.primary }}
               disabled={userAnswer === ""}
-              className="flex-1 aspect-square rounded-2xl items-center justify-center"
-              style={{
-                backgroundColor: userAnswer !== "" ? colors.primary : colors.border,
-                opacity: userAnswer !== "" ? 1 : 0.5,
-              }}
             >
-              <Text className="text-xl font-bold" style={{ color: userAnswer !== "" ? "#000000" : colors.muted }}>
+              <Text className="text-2xl font-bold" style={{ color: "#000000" }}>
                 ✓
               </Text>
             </TouchableOpacity>

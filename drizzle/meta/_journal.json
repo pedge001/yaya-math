@@ -22,6 +22,20 @@
       "when": 1770866496600,
       "tag": "0002_rich_pete_wisdom",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1770866845849,
+      "tag": "0003_thankful_metal_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1770867082481,
+      "tag": "0004_majestic_beyonder",
+      "breakpoints": true
     }
   ]
 }

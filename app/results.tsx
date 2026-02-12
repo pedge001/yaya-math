@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Text, View, TouchableOpacity, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -6,6 +6,7 @@ import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { updateStreak } from "@/lib/streak-tracker";
 
 export default function ResultsScreen() {
   const params = useLocalSearchParams();
@@ -15,17 +16,33 @@ export default function ResultsScreen() {
   const correct = parseInt(params.correct as string);
   const total = parseInt(params.total as string);
   const operations = params.operations as string;
+  const isSpeedMode = params.speedMode === "true";
+  const completionTime = params.completionTime ? parseInt(params.completionTime as string) : 0;
   
   // Parse first operation for leaderboard checking
   const firstOperation = operations.split(",")[0] as "addition" | "subtraction" | "multiplication" | "division";
 
   const percentage = Math.round((correct / total) * 100);
 
-  const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery({ operation: firstOperation });
+  const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery({ operation: firstOperation }, { enabled: !isSpeedMode });
+  const { data: speedLeaderboardData } = trpc.speedLeaderboard.getTop10.useQuery({ operation: firstOperation }, { enabled: isSpeedMode });
   const [isHighScore, setIsHighScore] = useState(false);
 
   useEffect(() => {
-    if (leaderboardData) {
+    // Update streak when results screen loads
+    updateStreak();
+
+    if (isSpeedMode && speedLeaderboardData) {
+      // Check if this time qualifies for top 10 (lower is better)
+      if (speedLeaderboardData.length < 10) {
+        setIsHighScore(true);
+      } else {
+        const slowestTime = speedLeaderboardData[speedLeaderboardData.length - 1].completionTime;
+        if (completionTime < slowestTime) {
+          setIsHighScore(true);
+        }
+      }
+    } else if (!isSpeedMode && leaderboardData) {
       // Check if this score qualifies for top 10
       if (leaderboardData.length < 10) {
         setIsHighScore(true);
@@ -36,16 +53,23 @@ export default function ResultsScreen() {
         }
       }
     }
-  }, [leaderboardData, correct]);
+  }, [leaderboardData, speedLeaderboardData, correct, completionTime, isSpeedMode]);
 
   const handleEnterInitials = () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    router.push({
-      pathname: "/enter-initials",
-      params: { correct, total, operation: firstOperation },
-    });
+    if (isSpeedMode) {
+      router.push({
+        pathname: "/enter-initials-speed",
+        params: { completionTime, total, operation: firstOperation },
+      });
+    } else {
+      router.push({
+        pathname: "/enter-initials",
+        params: { correct, total, operation: firstOperation },
+      });
+    }
   };
 
   const handlePracticeAgain = () => {

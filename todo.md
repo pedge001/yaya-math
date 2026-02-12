@@ -28,3 +28,17 @@
 - [x] Update leaderboard screen with operation tabs/filters
 - [x] Update high score detection to check operation-specific leaderboards
 - [x] Test separate leaderboards for each operation
+- [x] Add speed mode toggle to operation selection screen
+- [x] Implement timer in practice screen for speed mode
+- [x] Update database schema for time-based leaderboard entries
+- [x] Create time-based leaderboard API endpoints
+- [x] Add speed mode leaderboard screen with completion times
+- [x] Create daily challenge database schema
+- [x] Implement daily challenge generation logic
+- [x] Build daily challenge API endpoints with 24-hour reset
+- [x] Create daily challenge UI on home screen
+- [x] Add daily challenge leaderboard screen
+- [x] Implement streak counter with AsyncStorage
+- [x] Create streak badge component
+- [x] Display streak counter on home screen
+- [x] Test all new features end-to-end
