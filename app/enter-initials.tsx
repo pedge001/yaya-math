@@ -16,7 +16,7 @@ export default function EnterInitialsScreen() {
 
   const correct = parseInt(params.correct as string);
   const total = parseInt(params.total as string);
-  const operations = params.operations as string;
+  const operation = params.operation as "addition" | "subtraction" | "multiplication" | "division";
 
   const [initials, setInitials] = useState(["A", "A", "A"]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -77,7 +77,7 @@ export default function EnterInitialsScreen() {
         initials: initials.join(""),
         score: correct,
         totalProblems: total,
-        operations: operations,
+        operation: operation,
       });
 
       router.push("/leaderboard");

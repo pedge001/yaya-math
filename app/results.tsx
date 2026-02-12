@@ -15,10 +15,13 @@ export default function ResultsScreen() {
   const correct = parseInt(params.correct as string);
   const total = parseInt(params.total as string);
   const operations = params.operations as string;
+  
+  // Parse first operation for leaderboard checking
+  const firstOperation = operations.split(",")[0] as "addition" | "subtraction" | "multiplication" | "division";
 
   const percentage = Math.round((correct / total) * 100);
 
-  const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery();
+  const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery({ operation: firstOperation });
   const [isHighScore, setIsHighScore] = useState(false);
 
   useEffect(() => {
@@ -41,7 +44,7 @@ export default function ResultsScreen() {
     }
     router.push({
       pathname: "/enter-initials",
-      params: { correct, total, operations },
+      params: { correct, total, operation: firstOperation },
     });
   };
 

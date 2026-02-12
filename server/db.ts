@@ -91,8 +91,9 @@ export async function getUserByOpenId(openId: string) {
 
 /**
  * Get top 10 leaderboard entries ordered by score (descending)
+ * @param operation - Optional filter by operation type
  */
-export async function getTop10Leaderboard() {
+export async function getTop10Leaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division") {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot get leaderboard: database not available");
@@ -100,9 +101,13 @@ export async function getTop10Leaderboard() {
   }
 
   try {
-    const results = await db
-      .select()
-      .from(leaderboard)
+    let query = db.select().from(leaderboard);
+    
+    if (operation) {
+      query = query.where(eq(leaderboard.operation, operation)) as any;
+    }
+    
+    const results = await query
       .orderBy(desc(leaderboard.score), leaderboard.createdAt)
       .limit(10);
     return results;

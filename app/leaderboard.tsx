@@ -7,10 +7,20 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 
+type Operation = "addition" | "subtraction" | "multiplication" | "division";
+
 export default function LeaderboardScreen() {
   const router = useRouter();
   const colors = useColors();
-  const { data: leaderboardData, isLoading } = trpc.leaderboard.getTop10.useQuery();
+  const [selectedOperation, setSelectedOperation] = useState<Operation>("multiplication");
+  const { data: leaderboardData, isLoading } = trpc.leaderboard.getTop10.useQuery({ operation: selectedOperation });
+
+  const operations: { key: Operation; label: string; symbol: string }[] = [
+    { key: "addition", label: "Add", symbol: "+" },
+    { key: "subtraction", label: "Sub", symbol: "−" },
+    { key: "multiplication", label: "Mult", symbol: "×" },
+    { key: "division", label: "Div", symbol: "÷" },
+  ];
 
   const handleBack = () => {
     if (Platform.OS !== "web") {
@@ -23,7 +33,7 @@ export default function LeaderboardScreen() {
     <ScreenContainer className="p-6" style={{ backgroundColor: "#000000" }}>
       <View className="flex-1">
         {/* Retro Header */}
-        <View className="items-center pt-4 pb-8">
+        <View className="items-center pt-4 pb-4">
           <Text
             className="text-5xl font-bold mb-2"
             style={{
@@ -45,6 +55,46 @@ export default function LeaderboardScreen() {
           >
             ═══════════════════════
           </Text>
+        </View>
+
+        {/* Operation Tabs */}
+        <View className="flex-row justify-around mb-6 px-2">
+          {operations.map((op) => (
+            <TouchableOpacity
+              key={op.key}
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                setSelectedOperation(op.key);
+              }}
+              className="items-center justify-center py-2 px-3 border-2"
+              style={{
+                borderColor: selectedOperation === op.key ? colors.primary : "rgba(182, 255, 251, 0.3)",
+                backgroundColor: selectedOperation === op.key ? "rgba(182, 255, 251, 0.1)" : "transparent",
+                minWidth: 70,
+              }}
+            >
+              <Text
+                className="text-2xl font-bold mb-1"
+                style={{
+                  color: selectedOperation === op.key ? colors.primary : "rgba(182, 255, 251, 0.5)",
+                  fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+                }}
+              >
+                {op.symbol}
+              </Text>
+              <Text
+                className="text-xs font-bold"
+                style={{
+                  color: selectedOperation === op.key ? colors.primary : "rgba(182, 255, 251, 0.5)",
+                  fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+                }}
+              >
+                {op.label.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Leaderboard Table */}

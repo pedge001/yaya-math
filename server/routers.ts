@@ -20,16 +20,22 @@ export const appRouter = router({
   }),
 
   leaderboard: router({
-    getTop10: publicProcedure.query(async () => {
-      return await db.getTop10Leaderboard();
-    }),
+    getTop10: publicProcedure
+      .input(
+        z.object({
+          operation: z.enum(["addition", "subtraction", "multiplication", "division"]).optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return await db.getTop10Leaderboard(input.operation);
+      }),
     submitScore: publicProcedure
       .input(
         z.object({
           initials: z.string().length(3).toUpperCase(),
           score: z.number().int().min(0).max(50),
           totalProblems: z.number().int().min(1),
-          operations: z.string(),
+          operation: z.enum(["addition", "subtraction", "multiplication", "division"]),
         })
       )
       .mutation(async ({ input }) => {

@@ -34,7 +34,7 @@ export const leaderboard = mysqlTable("leaderboard", {
   initials: varchar("initials", { length: 3 }).notNull(),
   score: int("score").notNull(),
   totalProblems: int("totalProblems").notNull(),
-  operations: text("operations").notNull(), // Comma-separated list of operations
+  operation: mysqlEnum("operation", ["addition", "subtraction", "multiplication", "division"]).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

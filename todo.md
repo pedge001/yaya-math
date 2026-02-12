@@ -24,3 +24,7 @@
 - [x] Add leaderboard link to home screen
 - [x] Integrate leaderboard submission into results flow
 - [x] Test leaderboard functionality end-to-end
+- [x] Update backend API to filter leaderboard by operation type
+- [x] Update leaderboard screen with operation tabs/filters
+- [x] Update high score detection to check operation-specific leaderboards
+- [x] Test separate leaderboards for each operation
