@@ -8,6 +8,9 @@ import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { updateStreak } from "@/lib/streak-tracker";
 import { playSound } from "@/lib/sound-manager";
+import { checkAndUpdatePersonalBest } from "@/lib/personal-best-tracker";
+import { updateAchievementProgress } from "@/lib/achievements";
+import { getStreakData } from "@/lib/streak-tracker";
 
 export default function ResultsScreen() {
   const params = useLocalSearchParams();
@@ -28,10 +31,23 @@ export default function ResultsScreen() {
   const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery({ operation: firstOperation }, { enabled: !isSpeedMode });
   const { data: speedLeaderboardData } = trpc.speedLeaderboard.getTop10.useQuery({ operation: firstOperation }, { enabled: isSpeedMode });
   const [isHighScore, setIsHighScore] = useState(false);
+  const [isPersonalBest, setIsPersonalBest] = useState(false);
 
   useEffect(() => {
     // Update streak when results screen loads
     updateStreak();
+
+    // Check for personal best
+    checkAndUpdatePersonalBest(firstOperation, correct, isSpeedMode, completionTime).then((isNewBest) => {
+      setIsPersonalBest(isNewBest);
+    });
+
+    // Update achievements
+    const isPerfect = correct === total;
+    const isSpeedUnder3Min = isSpeedMode && completionTime < 180;
+    getStreakData().then((streakData) => {
+      updateAchievementProgress(total, isPerfect, isSpeedUnder3Min, streakData.currentStreak);
+    });
 
     if (isSpeedMode && speedLeaderboardData) {
       // Check if this time qualifies for top 10 (lower is better)
@@ -117,6 +133,14 @@ export default function ResultsScreen() {
               {correct} / {total} Correct
             </Text>
           </View>
+
+          {isPersonalBest && (
+            <View className="w-full max-w-sm rounded-2xl p-4 mb-4" style={{ backgroundColor: "#FFD700" }}>
+              <Text className="text-xl font-bold text-center" style={{ color: "#000000" }}>
+                🎉 NEW PERSONAL BEST! 🎉
+              </Text>
+            </View>
+          )}
 
           <View className="w-full max-w-sm bg-surface rounded-2xl p-6" style={{ backgroundColor: colors.surface }}>
             <View className="flex-row justify-between mb-3">

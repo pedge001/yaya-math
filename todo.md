@@ -49,3 +49,14 @@
 - [x] Add incorrect answer sound effect in practice screen
 - [x] Add high score fanfare sound effect
 - [x] Test sound effects on all platforms
+- [x] Create personal best tracking utility with AsyncStorage
+- [x] Store best scores per operation type
+- [x] Display "New Personal Best!" message in results screen
+- [ ] Show personal bests on home screen or stats page
+- [x] Create achievements system with badge definitions
+- [x] Track achievement progress (problems solved, perfect scores, speed records, streaks)
+- [x] Display unlocked badges on home screen
+- [x] Create achievements screen to view all badges
+- [ ] Add badge unlock notifications with animations
+- [x] Test personal best tracking
+- [x] Test achievements system

@@ -7,6 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { getStreakData, getStreakBadge, getStreakMessage, type StreakData } from "@/lib/streak-tracker";
 import { playSound } from "@/lib/sound-manager";
+import { getUnlockedCount } from "@/lib/achievements";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 
@@ -27,16 +28,23 @@ export default function OperationSelectionScreen() {
   const [selectedOperations, setSelectedOperations] = useState<Set<Operation>>(new Set());
   const [isSpeedMode, setIsSpeedMode] = useState(false);
   const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastPracticeDate: "", longestStreak: 0 });
+  const [unlockedAchievements, setUnlockedAchievements] = useState(0);
   const colors = useColors();
   const router = useRouter();
 
   useEffect(() => {
     loadStreakData();
+    loadAchievements();
   }, []);
 
   const loadStreakData = async () => {
     const data = await getStreakData();
     setStreakData(data);
+  };
+
+  const loadAchievements = async () => {
+    const count = await getUnlockedCount();
+    setUnlockedAchievements(count);
   };
 
   const toggleOperation = (operation: Operation) => {
@@ -107,6 +115,25 @@ export default function OperationSelectionScreen() {
               </Text>
             </View>
           )}
+
+          {/* Achievements Button */}
+          <TouchableOpacity
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                playSound("buttonPress");
+              }
+              router.push("/achievements");
+            }}
+            className="mt-3"
+          >
+            <View className="flex-row items-center justify-center gap-2">
+              <Text className="text-lg">🏅</Text>
+              <Text className="text-base font-semibold" style={{ color: colors.primary }}>
+                Achievements ({unlockedAchievements}/12)
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Daily Challenge Button */}
