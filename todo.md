@@ -71,3 +71,5 @@
 - [x] Add chart for improvement trends over past 7/30 days
 - [x] Add statistics link to home screen
 - [x] Test statistics tracking and dashboard
+- [x] Fix color scheme back to black background with cyan branding
+- [x] Reorganize home screen layout - move leaderboard button to bottom navigation

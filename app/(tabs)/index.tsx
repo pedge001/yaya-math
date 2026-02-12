@@ -78,6 +78,7 @@ export default function OperationSelectionScreen() {
   const startPractice = () => {
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      playSound("buttonPress");
     }
     const operationsParam = Array.from(selectedOperations).join(",");
     router.push(`/practice?operations=${operationsParam}&speedMode=${isSpeedMode}`);
@@ -97,7 +98,7 @@ export default function OperationSelectionScreen() {
     <ScreenContainer className="p-6">
       <View className="flex-1 justify-between">
         {/* Header */}
-        <View className="items-center pt-8">
+        <View className="items-center pt-4">
           <Text className="text-4xl font-bold text-foreground mb-2">Math Practice</Text>
           <Text className="text-base text-muted">Choose operations to practice</Text>
           
@@ -153,10 +154,8 @@ export default function OperationSelectionScreen() {
               </Text>
             </View>
           </TouchableOpacity>
-        </View>
 
-        {/* Daily Challenge Button */}
-        <View className="items-center mt-4">
+          {/* Daily Challenge Button */}
           <TouchableOpacity
             onPress={() => {
               if (Platform.OS !== "web") {
@@ -165,7 +164,7 @@ export default function OperationSelectionScreen() {
               }
               router.push("/daily-challenge");
             }}
-            className="py-3 px-6 rounded-full border-2"
+            className="mt-3 py-3 px-6 rounded-full border-2"
             style={{
               borderColor: colors.primary,
               backgroundColor: "rgba(182, 255, 251, 0.1)",
@@ -245,42 +244,6 @@ export default function OperationSelectionScreen() {
               style={{ color: isSpeedMode ? colors.primary : colors.muted }}
             >
               Speed Mode {isSpeedMode ? "ON" : "OFF"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Leaderboard Links */}
-        <View className="items-center mb-4 gap-2">
-          <TouchableOpacity
-            onPress={() => {
-              if (Platform.OS !== "web") {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                playSound("buttonPress");
-              }
-              router.push("/leaderboard");
-            }}
-          >
-            <Text
-              className="text-base font-semibold underline"
-              style={{ color: colors.primary }}
-            >
-              🏆 View Leaderboard
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              if (Platform.OS !== "web") {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                playSound("buttonPress");
-              }
-              router.push("/speed-leaderboard");
-            }}
-          >
-            <Text
-              className="text-base font-semibold underline"
-              style={{ color: colors.primary }}
-            >
-              ⚡ Speed Leaderboard
             </Text>
           </TouchableOpacity>
         </View>
