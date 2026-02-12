@@ -16,3 +16,4 @@
 - [x] Create results screen with statistics
 - [x] Add navigation between screens
 - [x] Test complete user flow
+- [x] Change multiplication and division maximum from 12x12 to 10x10

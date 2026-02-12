@@ -25,13 +25,13 @@ function generateProblem(operations: Operation[]): Problem {
       answer = num1 - num2;
       break;
     case "multiplication":
-      num1 = Math.floor(Math.random() * 12) + 1;
-      num2 = Math.floor(Math.random() * 12) + 1;
+      num1 = Math.floor(Math.random() * 10) + 1;
+      num2 = Math.floor(Math.random() * 10) + 1;
       answer = num1 * num2;
       break;
     case "division":
-      num2 = Math.floor(Math.random() * 12) + 1;
-      answer = Math.floor(Math.random() * 12) + 1;
+      num2 = Math.floor(Math.random() * 10) + 1;
+      answer = Math.floor(Math.random() * 10) + 1;
       num1 = num2 * answer;
       break;
   }
@@ -69,9 +69,9 @@ describe("Problem Generator", () => {
       expect(problem.operation).toBe("multiplication");
       expect(problem.answer).toBe(problem.num1 * problem.num2);
       expect(problem.num1).toBeGreaterThanOrEqual(1);
-      expect(problem.num1).toBeLessThanOrEqual(12);
+      expect(problem.num1).toBeLessThanOrEqual(10);
       expect(problem.num2).toBeGreaterThanOrEqual(1);
-      expect(problem.num2).toBeLessThanOrEqual(12);
+      expect(problem.num2).toBeLessThanOrEqual(10);
     }
   });
 
@@ -82,7 +82,7 @@ describe("Problem Generator", () => {
       expect(problem.num1 / problem.num2).toBe(problem.answer);
       expect(problem.num1 % problem.num2).toBe(0);
       expect(problem.num2).toBeGreaterThanOrEqual(1);
-      expect(problem.num2).toBeLessThanOrEqual(12);
+      expect(problem.num2).toBeLessThanOrEqual(10);
     }
   });
 

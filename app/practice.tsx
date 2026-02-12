@@ -40,13 +40,13 @@ function generateProblem(operations: Operation[]): Problem {
       answer = num1 - num2;
       break;
     case "multiplication":
-      num1 = Math.floor(Math.random() * 12) + 1;
-      num2 = Math.floor(Math.random() * 12) + 1;
+      num1 = Math.floor(Math.random() * 10) + 1;
+      num2 = Math.floor(Math.random() * 10) + 1;
       answer = num1 * num2;
       break;
     case "division":
-      num2 = Math.floor(Math.random() * 12) + 1;
-      answer = Math.floor(Math.random() * 12) + 1;
+      num2 = Math.floor(Math.random() * 10) + 1;
+      answer = Math.floor(Math.random() * 10) + 1;
       num1 = num2 * answer;
       break;
   }

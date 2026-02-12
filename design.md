@@ -106,8 +106,8 @@ A mobile math practice app for learning basic arithmetic operations (addition, s
 - **Transitions**: Smooth fade between screens (200-300ms)
 
 ## Problem Generation Rules
-- **Multiplication**: 1-12 × 1-12
+- **Multiplication**: 1-10 × 1-10
 - **Addition**: 1-99 + 1-99
 - **Subtraction**: 1-99 − 1-99 (result always positive)
-- **Division**: Only problems with whole number answers, divisors 1-12
+- **Division**: Only problems with whole number answers, divisors 1-10
 - **Random**: No repeating problems in same session
