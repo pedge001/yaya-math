@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertLeaderboardEntry, InsertUser, leaderboard, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,44 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * Get top 10 leaderboard entries ordered by score (descending)
+ */
+export async function getTop10Leaderboard() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get leaderboard: database not available");
+    return [];
+  }
+
+  try {
+    const results = await db
+      .select()
+      .from(leaderboard)
+      .orderBy(desc(leaderboard.score), leaderboard.createdAt)
+      .limit(10);
+    return results;
+  } catch (error) {
+    console.error("[Database] Failed to get leaderboard:", error);
+    return [];
+  }
+}
+
+/**
+ * Add a new leaderboard entry
+ */
+export async function addLeaderboardEntry(entry: InsertLeaderboardEntry) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add leaderboard entry: database not available");
+    return { success: false, error: "Database not available" };
+  }
+
+  try {
+    await db.insert(leaderboard).values(entry);
+    return { success: true };
+  } catch (error) {
+    console.error("[Database] Failed to add leaderboard entry:", error);
+    return { success: false, error: "Failed to add entry" };
+  }
+}

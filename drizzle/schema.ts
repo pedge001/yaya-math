@@ -25,4 +25,18 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Leaderboard table for tracking high scores.
+ * No user authentication required - uses initials instead.
+ */
+export const leaderboard = mysqlTable("leaderboard", {
+  id: int("id").autoincrement().primaryKey(),
+  initials: varchar("initials", { length: 3 }).notNull(),
+  score: int("score").notNull(),
+  totalProblems: int("totalProblems").notNull(),
+  operations: text("operations").notNull(), // Comma-separated list of operations
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LeaderboardEntry = typeof leaderboard.$inferSelect;
+export type InsertLeaderboardEntry = typeof leaderboard.$inferInsert;

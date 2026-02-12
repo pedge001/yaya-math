@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { Text, View, TouchableOpacity, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
+import { trpc } from "@/lib/trpc";
 
 export default function ResultsScreen() {
   const params = useLocalSearchParams();
@@ -15,6 +17,33 @@ export default function ResultsScreen() {
   const operations = params.operations as string;
 
   const percentage = Math.round((correct / total) * 100);
+
+  const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery();
+  const [isHighScore, setIsHighScore] = useState(false);
+
+  useEffect(() => {
+    if (leaderboardData) {
+      // Check if this score qualifies for top 10
+      if (leaderboardData.length < 10) {
+        setIsHighScore(true);
+      } else {
+        const lowestScore = leaderboardData[leaderboardData.length - 1].score;
+        if (correct > lowestScore) {
+          setIsHighScore(true);
+        }
+      }
+    }
+  }, [leaderboardData, correct]);
+
+  const handleEnterInitials = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    router.push({
+      pathname: "/enter-initials",
+      params: { correct, total, operations },
+    });
+  };
 
   const handlePracticeAgain = () => {
     if (Platform.OS !== "web") {
@@ -67,6 +96,18 @@ export default function ResultsScreen() {
 
         {/* Action Buttons */}
         <View className="gap-3 pb-4">
+          {isHighScore && (
+            <TouchableOpacity
+              onPress={handleEnterInitials}
+              className="py-4 rounded-full"
+              style={{ backgroundColor: "#FFD700" }}
+            >
+              <Text className="text-center text-base font-bold" style={{ color: "#000000" }}>
+                🏆 Submit to Leaderboard
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             onPress={handlePracticeAgain}
             className="py-4 rounded-full"

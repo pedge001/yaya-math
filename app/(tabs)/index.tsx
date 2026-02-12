@@ -124,6 +124,25 @@ export default function OperationSelectionScreen() {
           </View>
         </View>
 
+        {/* Leaderboard Link */}
+        <View className="items-center mb-4">
+          <TouchableOpacity
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              router.push("/leaderboard");
+            }}
+          >
+            <Text
+              className="text-base font-semibold underline"
+              style={{ color: colors.primary }}
+            >
+              🏆 View Leaderboard
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Action Buttons */}
         <View className="gap-3 pb-4">
           <TouchableOpacity

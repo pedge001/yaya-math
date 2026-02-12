@@ -2,6 +2,8 @@ import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { z } from "zod";
+import * as db from "./db.js";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -17,12 +19,23 @@ export const appRouter = router({
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  leaderboard: router({
+    getTop10: publicProcedure.query(async () => {
+      return await db.getTop10Leaderboard();
+    }),
+    submitScore: publicProcedure
+      .input(
+        z.object({
+          initials: z.string().length(3).toUpperCase(),
+          score: z.number().int().min(0).max(50),
+          totalProblems: z.number().int().min(1),
+          operations: z.string(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return await db.addLeaderboardEntry(input);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

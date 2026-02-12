@@ -17,3 +17,10 @@
 - [x] Add navigation between screens
 - [x] Test complete user flow
 - [x] Change multiplication and division maximum from 12x12 to 10x10
+- [x] Create database schema for leaderboard entries
+- [x] Build backend API endpoints for leaderboard (get top 10, submit score)
+- [x] Create leaderboard screen with retro arcade styling
+- [x] Build initials input screen after completing practice session
+- [x] Add leaderboard link to home screen
+- [x] Integrate leaderboard submission into results flow
+- [x] Test leaderboard functionality end-to-end
