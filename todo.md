@@ -42,3 +42,10 @@
 - [x] Create streak badge component
 - [x] Display streak counter on home screen
 - [x] Test all new features end-to-end
+- [x] Find and download retro arcade sound effects
+- [x] Create sound manager utility for audio playback
+- [x] Add button press sound effects throughout the app
+- [x] Add correct answer sound effect in practice screen
+- [x] Add incorrect answer sound effect in practice screen
+- [x] Add high score fanfare sound effect
+- [x] Test sound effects on all platforms

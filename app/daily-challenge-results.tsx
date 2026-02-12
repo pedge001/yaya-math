@@ -7,6 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { updateStreak } from "@/lib/streak-tracker";
+import { playSound } from "@/lib/sound-manager";
 
 export default function DailyChallengeResultsScreen() {
   const params = useLocalSearchParams();
@@ -30,10 +31,16 @@ export default function DailyChallengeResultsScreen() {
       // Check if this score qualifies for top 10
       if (leaderboardData.length < 10) {
         setIsHighScore(true);
+        if (Platform.OS !== "web") {
+          playSound("highScore");
+        }
       } else {
         const lowestScore = leaderboardData[leaderboardData.length - 1].score;
         if (correct > lowestScore) {
           setIsHighScore(true);
+          if (Platform.OS !== "web") {
+            playSound("highScore");
+          }
         }
       }
     }

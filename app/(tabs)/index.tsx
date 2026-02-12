@@ -6,6 +6,7 @@ import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { getStreakData, getStreakBadge, getStreakMessage, type StreakData } from "@/lib/streak-tracker";
+import { playSound } from "@/lib/sound-manager";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 
@@ -41,6 +42,7 @@ export default function OperationSelectionScreen() {
   const toggleOperation = (operation: Operation) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      playSound("buttonPress");
     }
     setSelectedOperations((prev) => {
       const newSet = new Set(prev);
@@ -56,6 +58,7 @@ export default function OperationSelectionScreen() {
   const selectAll = () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      playSound("buttonPress");
     }
     if (selectedOperations.size === operations.length) {
       setSelectedOperations(new Set());
@@ -75,6 +78,7 @@ export default function OperationSelectionScreen() {
   const toggleSpeedMode = () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      playSound("buttonPress");
     }
     setIsSpeedMode(!isSpeedMode);
   };
@@ -111,6 +115,7 @@ export default function OperationSelectionScreen() {
             onPress={() => {
               if (Platform.OS !== "web") {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                playSound("buttonPress");
               }
               router.push("/daily-challenge");
             }}
@@ -204,6 +209,7 @@ export default function OperationSelectionScreen() {
             onPress={() => {
               if (Platform.OS !== "web") {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                playSound("buttonPress");
               }
               router.push("/leaderboard");
             }}
@@ -219,6 +225,7 @@ export default function OperationSelectionScreen() {
             onPress={() => {
               if (Platform.OS !== "web") {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                playSound("buttonPress");
               }
               router.push("/speed-leaderboard");
             }}

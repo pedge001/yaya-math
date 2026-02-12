@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Text, View, TouchableOpacity, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -12,6 +12,7 @@ import Animated, {
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
+import { playSound } from "@/lib/sound-manager";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 
@@ -133,6 +134,7 @@ export default function PracticeScreen() {
       Haptics.notificationAsync(
         isCorrect ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error
       );
+      playSound(isCorrect ? "correct" : "incorrect");
     }
 
     if (isCorrect) {
