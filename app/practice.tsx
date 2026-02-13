@@ -182,19 +182,17 @@ export default function PracticeScreen() {
     <ScreenContainer className="p-2">
       <View className="flex-1 justify-between">
         {/* Header */}
-        <View className="flex-row justify-between items-start pb-2">
-          <View>
-            <Text className="text-xs text-muted">Q{currentProblemIndex + 1}/{TOTAL_PROBLEMS}</Text>
-          </View>
+        <View className="gap-1 pb-2">
           {isSpeedMode && (
             <View className="items-center">
               <Text className="text-xs text-muted">TIME</Text>
-              <Text className="text-lg font-bold" style={{ color: colors.primary }}>
+              <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
                 {Math.floor(elapsedTime / 60)}:{String(elapsedTime % 60).padStart(2, "0")}
               </Text>
             </View>
           )}
-          <View>
+          <View className="flex-row justify-between">
+            <Text className="text-xs text-muted">Q{currentProblemIndex + 1}/{TOTAL_PROBLEMS}</Text>
             <Text className="text-xs text-muted">Score: {correctCount}/{currentProblemIndex}</Text>
           </View>
         </View>
