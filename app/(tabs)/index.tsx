@@ -5,9 +5,7 @@ import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { getStreakData, getStreakBadge, getStreakMessage, type StreakData } from "@/lib/streak-tracker";
 import { playSound } from "@/lib/sound-manager";
-import { getUnlockedCount } from "@/lib/achievements";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 
@@ -27,25 +25,8 @@ const operations: OperationCard[] = [
 export default function OperationSelectionScreen() {
   const [selectedOperations, setSelectedOperations] = useState<Set<Operation>>(new Set());
   const [isSpeedMode, setIsSpeedMode] = useState(false);
-  const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastPracticeDate: "", longestStreak: 0 });
-  const [unlockedAchievements, setUnlockedAchievements] = useState(0);
   const colors = useColors();
   const router = useRouter();
-
-  useEffect(() => {
-    loadStreakData();
-    loadAchievements();
-  }, []);
-
-  const loadStreakData = async () => {
-    const data = await getStreakData();
-    setStreakData(data);
-  };
-
-  const loadAchievements = async () => {
-    const count = await getUnlockedCount();
-    setUnlockedAchievements(count);
-  };
 
   const toggleOperation = (operation: Operation) => {
     if (Platform.OS !== "web") {
@@ -61,18 +42,6 @@ export default function OperationSelectionScreen() {
       }
       return newSet;
     });
-  };
-
-  const selectAll = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      playSound("buttonPress");
-    }
-    if (selectedOperations.size === operations.length) {
-      setSelectedOperations(new Set());
-    } else {
-      setSelectedOperations(new Set(operations.map((op) => op.id)));
-    }
   };
 
   const startPractice = () => {
@@ -92,135 +61,52 @@ export default function OperationSelectionScreen() {
     setIsSpeedMode(!isSpeedMode);
   };
 
-  const allSelected = selectedOperations.size === operations.length;
-
   return (
-    <ScreenContainer className="p-6">
+    <ScreenContainer className="p-4">
       <View className="flex-1 justify-between">
         {/* Header */}
-        <View className="items-center pt-4">
-          <Text className="text-4xl font-bold text-foreground mb-2">Math Practice</Text>
-          <Text className="text-base text-muted">Choose operations to practice</Text>
-          
-          {/* Streak Badge */}
-          {streakData.currentStreak > 0 && (
-            <View className="mt-4 px-6 py-3 rounded-full border-2" style={{ borderColor: colors.primary, backgroundColor: "rgba(182, 255, 251, 0.1)" }}>
-              <View className="flex-row items-center gap-2">
-                <Text className="text-2xl">{getStreakBadge(streakData.currentStreak)}</Text>
-                <Text className="text-lg font-bold" style={{ color: colors.primary }}>
-                  {streakData.currentStreak} Day Streak!
-                </Text>
-              </View>
-              <Text className="text-xs text-center text-muted mt-1">
-                {getStreakMessage(streakData.currentStreak)}
-              </Text>
-            </View>
-          )}
-
-          {/* Achievements Button */}
-          <TouchableOpacity
-            onPress={() => {
-              if (Platform.OS !== "web") {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                playSound("buttonPress");
-              }
-              router.push("/achievements");
-            }}
-            className="mt-3"
-          >
-            <View className="flex-row items-center justify-center gap-2">
-              <Text className="text-lg">🏅</Text>
-              <Text className="text-base font-semibold" style={{ color: colors.primary }}>
-                Achievements ({unlockedAchievements}/12)
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* Statistics Button */}
-          <TouchableOpacity
-            onPress={() => {
-              if (Platform.OS !== "web") {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                playSound("buttonPress");
-              }
-              router.push("/statistics");
-            }}
-            className="mt-2"
-          >
-            <View className="flex-row items-center justify-center gap-2">
-              <Text className="text-lg">📊</Text>
-              <Text className="text-base font-semibold" style={{ color: colors.primary }}>
-                Statistics
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* Daily Challenge Button */}
-          <TouchableOpacity
-            onPress={() => {
-              if (Platform.OS !== "web") {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                playSound("buttonPress");
-              }
-              router.push("/daily-challenge");
-            }}
-            className="mt-3 py-3 px-6 rounded-full border-2"
-            style={{
-              borderColor: colors.primary,
-              backgroundColor: "rgba(182, 255, 251, 0.1)",
-            }}
-          >
-            <Text className="text-lg font-bold" style={{ color: colors.primary }}>
-              🌟 Today's Challenge
-            </Text>
-          </TouchableOpacity>
+        <View className="items-center pt-2 pb-4">
+          <Text className="text-3xl font-bold text-foreground">Math Practice</Text>
+          <Text className="text-sm text-muted mt-1">Choose operations to practice</Text>
         </View>
 
-        {/* Operation Cards Grid */}
+        {/* Operation Cards Grid - Smaller */}
         <View className="flex-1 justify-center">
-          <View className="gap-4">
-            <View className="flex-row gap-4">
+          <View className="gap-3">
+            <View className="flex-row gap-3">
               {operations.slice(0, 2).map((op) => {
                 const isSelected = selectedOperations.has(op.id);
                 return (
                   <TouchableOpacity
                     key={op.id}
                     onPress={() => toggleOperation(op.id)}
-                    className="flex-1 aspect-square bg-surface rounded-2xl items-center justify-center border-2"
+                    className="flex-1 aspect-square bg-surface rounded-xl items-center justify-center border-2"
                     style={{
                       borderColor: isSelected ? colors.primary : colors.border,
                       backgroundColor: isSelected ? `${colors.primary}20` : colors.surface,
                     }}
                   >
-                    <Text className="text-6xl mb-2" style={{ color: colors.foreground }}>
-                      {op.symbol}
-                    </Text>
-                    <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
-                      {op.label}
-                    </Text>
+                    <Text className="text-5xl mb-1">{op.symbol}</Text>
+                    <Text className="text-xs font-medium text-foreground">{op.label}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-            <View className="flex-row gap-4">
+            <View className="flex-row gap-3">
               {operations.slice(2, 4).map((op) => {
                 const isSelected = selectedOperations.has(op.id);
                 return (
                   <TouchableOpacity
                     key={op.id}
                     onPress={() => toggleOperation(op.id)}
-                    className="flex-1 aspect-square bg-surface rounded-2xl items-center justify-center border-2"
+                    className="flex-1 aspect-square bg-surface rounded-xl items-center justify-center border-2"
                     style={{
                       borderColor: isSelected ? colors.primary : colors.border,
                       backgroundColor: isSelected ? `${colors.primary}20` : colors.surface,
                     }}
                   >
-                    <Text className="text-6xl mb-2" style={{ color: colors.foreground }}>
-                      {op.symbol}
-                    </Text>
-                    <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
-                      {op.label}
-                    </Text>
+                    <Text className="text-5xl mb-1">{op.symbol}</Text>
+                    <Text className="text-xs font-medium text-foreground">{op.label}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -232,15 +118,15 @@ export default function OperationSelectionScreen() {
         <View className="items-center mb-4">
           <TouchableOpacity
             onPress={toggleSpeedMode}
-            className="flex-row items-center gap-2 py-3 px-6 rounded-full border-2"
+            className="flex-row items-center gap-2 py-2 px-4 rounded-full border-2"
             style={{
               borderColor: isSpeedMode ? colors.primary : "rgba(182, 255, 251, 0.3)",
               backgroundColor: isSpeedMode ? "rgba(182, 255, 251, 0.1)" : "transparent",
             }}
           >
-            <Text className="text-2xl">⚡</Text>
+            <Text className="text-xl">⚡</Text>
             <Text
-              className="text-base font-semibold"
+              className="text-sm font-semibold"
               style={{ color: isSpeedMode ? colors.primary : colors.muted }}
             >
               Speed Mode {isSpeedMode ? "ON" : "OFF"}
@@ -248,38 +134,23 @@ export default function OperationSelectionScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Action Buttons */}
-        <View className="gap-3 pb-4">
-          <TouchableOpacity
-            onPress={selectAll}
-            className="py-4 rounded-full border-2"
-            style={{
-              borderColor: colors.primary,
-              backgroundColor: allSelected ? `${colors.primary}20` : "transparent",
-            }}
+        {/* Start Button */}
+        <TouchableOpacity
+          onPress={startPractice}
+          disabled={selectedOperations.size === 0}
+          className="py-4 rounded-full"
+          style={{
+            backgroundColor: selectedOperations.size > 0 ? colors.primary : colors.border,
+            opacity: selectedOperations.size > 0 ? 1 : 0.5,
+          }}
+        >
+          <Text
+            className="text-center text-base font-bold"
+            style={{ color: selectedOperations.size > 0 ? "#000000" : colors.muted }}
           >
-            <Text className="text-center text-base font-semibold" style={{ color: colors.foreground }}>
-              {allSelected ? "Deselect All" : "Select All"}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={startPractice}
-            disabled={selectedOperations.size === 0}
-            className="py-4 rounded-full"
-            style={{
-              backgroundColor: selectedOperations.size > 0 ? colors.primary : colors.border,
-              opacity: selectedOperations.size > 0 ? 1 : 0.5,
-            }}
-          >
-            <Text
-              className="text-center text-base font-bold"
-              style={{ color: selectedOperations.size > 0 ? "#000000" : colors.muted }}
-            >
-              Start Practice
-            </Text>
-          </TouchableOpacity>
-        </View>
+            Start Practice
+          </Text>
+        </TouchableOpacity>
       </View>
     </ScreenContainer>
   );

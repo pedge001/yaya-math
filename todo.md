@@ -73,3 +73,7 @@
 - [x] Test statistics tracking and dashboard
 - [x] Fix color scheme back to black background with cyan branding
 - [x] Reorganize home screen layout - move leaderboard button to bottom navigation
+- [x] Move achievements, statistics, daily challenge to bottom tabs
+- [x] Reduce operation card sizes
+- [x] Remove "Select All" button
+- [x] Fix speed mode toggle visibility
