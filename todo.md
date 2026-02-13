@@ -77,3 +77,4 @@
 - [x] Reduce operation card sizes
 - [x] Remove "Select All" button
 - [x] Fix speed mode toggle visibility
+- [x] Fix practice screen layout - prevent problem and keypad overlap
