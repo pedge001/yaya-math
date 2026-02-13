@@ -86,7 +86,7 @@ export default function OperationSelectionScreen() {
                       backgroundColor: isSelected ? `${colors.primary}20` : colors.surface,
                     }}
                   >
-                    <Text className="text-5xl mb-1">{op.symbol}</Text>
+                    <Text className="text-5xl mb-1" style={{ color: colors.primary }}>{op.symbol}</Text>
                     <Text className="text-xs font-medium text-foreground">{op.label}</Text>
                   </TouchableOpacity>
                 );
@@ -105,7 +105,7 @@ export default function OperationSelectionScreen() {
                       backgroundColor: isSelected ? `${colors.primary}20` : colors.surface,
                     }}
                   >
-                    <Text className="text-5xl mb-1">{op.symbol}</Text>
+                    <Text className="text-5xl mb-1" style={{ color: colors.primary }}>{op.symbol}</Text>
                     <Text className="text-xs font-medium text-foreground">{op.label}</Text>
                   </TouchableOpacity>
                 );
