@@ -78,3 +78,4 @@
 - [x] Remove "Select All" button
 - [x] Fix speed mode toggle visibility
 - [x] Fix practice screen layout - prevent problem and keypad overlap
+- [x] Fix speed mode timer layout - prevent pushing elements down
