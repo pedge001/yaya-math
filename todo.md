@@ -88,3 +88,7 @@
 - [x] Update leaderboard UI with difficulty tabs
 - [x] Update speed leaderboard with difficulty filtering
 - [x] Test difficulty-filtered leaderboards
+- [x] Add Railway configuration file
+- [x] Update package.json for production deployment
+- [ ] Add environment variable configuration
+- [ ] Test Railway deployment
