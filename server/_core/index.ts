@@ -56,6 +56,11 @@ async function startServer() {
 
   registerOAuthRoutes(app);
 
+  // Root endpoint for Railway healthcheck
+  app.get("/", (_req, res) => {
+    res.json({ status: "ok", service: "YaYa Math API", timestamp: Date.now() });
+  });
+
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
   });
