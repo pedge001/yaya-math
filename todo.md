@@ -92,3 +92,5 @@
 - [x] Update package.json for production deployment
 - [ ] Add environment variable configuration
 - [ ] Test Railway deployment
+- [x] Add Profile tab to bottom navigation
+- [x] Create privacy policy page in Profile tab
