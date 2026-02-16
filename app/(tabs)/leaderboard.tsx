@@ -8,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { playSound } from "@/lib/sound-manager";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
+type Difficulty = "easy" | "medium" | "hard";
 
 const operations: { id: Operation; label: string; symbol: string }[] = [
   { id: "addition", label: "Addition", symbol: "+" },
@@ -18,15 +19,16 @@ const operations: { id: Operation; label: string; symbol: string }[] = [
 
 export default function LeaderboardScreen() {
   const [selectedOperation, setSelectedOperation] = useState<Operation>("addition");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("easy");
   const [isSpeedMode, setIsSpeedMode] = useState(false);
   const colors = useColors();
 
   const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery(
-    { operation: selectedOperation },
+    { operation: selectedOperation, difficulty: selectedDifficulty },
     { enabled: !isSpeedMode }
   );
   const { data: speedLeaderboardData } = trpc.speedLeaderboard.getTop10.useQuery(
-    { operation: selectedOperation },
+    { operation: selectedOperation, difficulty: selectedDifficulty },
     { enabled: isSpeedMode }
   );
 
@@ -93,6 +95,35 @@ export default function LeaderboardScreen() {
               Speed
             </Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Difficulty Tabs */}
+        <View className="flex-row gap-2 mb-4">
+          {(["easy", "medium", "hard"] as Difficulty[]).map((diff) => (
+            <TouchableOpacity
+              key={diff}
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  playSound("buttonPress");
+                }
+                setSelectedDifficulty(diff);
+              }}
+              className="flex-1 py-2 rounded-lg"
+              style={{
+                backgroundColor: selectedDifficulty === diff ? colors.primary : colors.surface,
+              }}
+            >
+              <Text
+                className="text-center font-semibold text-sm"
+                style={{
+                  color: selectedDifficulty === diff ? "#000000" : colors.foreground,
+                }}
+              >
+                {diff.charAt(0).toUpperCase() + diff.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Operation Tabs */}

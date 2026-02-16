@@ -84,3 +84,7 @@
 - [x] Update problem generator to use difficulty ranges
 - [x] Update practice screen to use selected difficulty
 - [x] Test difficulty levels end-to-end
+- [x] Update backend API to filter leaderboards by difficulty
+- [x] Update leaderboard UI with difficulty tabs
+- [x] Update speed leaderboard with difficulty filtering
+- [x] Test difficulty-filtered leaderboards

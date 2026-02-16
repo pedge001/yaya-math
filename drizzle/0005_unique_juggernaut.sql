@@ -1,0 +1,2 @@
+ALTER TABLE `leaderboard` ADD `difficulty` enum('easy','medium','hard') DEFAULT 'easy' NOT NULL;--> statement-breakpoint
+ALTER TABLE `speed_leaderboard` ADD `difficulty` enum('easy','medium','hard') DEFAULT 'easy' NOT NULL;

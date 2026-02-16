@@ -92,8 +92,9 @@ export async function getUserByOpenId(openId: string) {
 /**
  * Get top 10 leaderboard entries ordered by score (descending)
  * @param operation - Optional filter by operation type
+ * @param difficulty - Optional filter by difficulty level
  */
-export async function getTop10Leaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division") {
+export async function getTop10Leaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division", difficulty?: "easy" | "medium" | "hard") {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot get leaderboard: database not available");
@@ -105,6 +106,10 @@ export async function getTop10Leaderboard(operation?: "addition" | "subtraction"
     
     if (operation) {
       query = query.where(eq(leaderboard.operation, operation)) as any;
+    }
+    
+    if (difficulty) {
+      query = query.where(eq(leaderboard.difficulty, difficulty)) as any;
     }
     
     const results = await query
@@ -139,8 +144,9 @@ export async function addLeaderboardEntry(entry: InsertLeaderboardEntry) {
 /**
  * Get top 10 speed leaderboard entries ordered by completion time (ascending)
  * @param operation - Optional filter by operation type
+ * @param difficulty - Optional filter by difficulty level
  */
-export async function getTop10SpeedLeaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division") {
+export async function getTop10SpeedLeaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division", difficulty?: "easy" | "medium" | "hard") {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot get speed leaderboard: database not available");
@@ -152,6 +158,10 @@ export async function getTop10SpeedLeaderboard(operation?: "addition" | "subtrac
     
     if (operation) {
       query = query.where(eq(speedLeaderboard.operation, operation)) as any;
+    }
+    
+    if (difficulty) {
+      query = query.where(eq(speedLeaderboard.difficulty, difficulty)) as any;
     }
     
     const results = await query

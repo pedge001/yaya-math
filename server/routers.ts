@@ -24,10 +24,11 @@ export const appRouter = router({
       .input(
         z.object({
           operation: z.enum(["addition", "subtraction", "multiplication", "division"]).optional(),
+          difficulty: z.enum(["easy", "medium", "hard"]).optional(),
         })
       )
       .query(async ({ input }) => {
-        return await db.getTop10Leaderboard(input.operation);
+        return await db.getTop10Leaderboard(input.operation, input.difficulty);
       }),
     submitScore: publicProcedure
       .input(
@@ -36,6 +37,7 @@ export const appRouter = router({
           score: z.number().int().min(0).max(50),
           totalProblems: z.number().int().min(1),
           operation: z.enum(["addition", "subtraction", "multiplication", "division"]),
+          difficulty: z.enum(["easy", "medium", "hard"]),
         })
       )
       .mutation(async ({ input }) => {
@@ -48,10 +50,11 @@ export const appRouter = router({
       .input(
         z.object({
           operation: z.enum(["addition", "subtraction", "multiplication", "division"]).optional(),
+          difficulty: z.enum(["easy", "medium", "hard"]).optional(),
         })
       )
       .query(async ({ input }) => {
-        return await db.getTop10SpeedLeaderboard(input.operation);
+        return await db.getTop10SpeedLeaderboard(input.operation, input.difficulty);
       }),
     submitTime: publicProcedure
       .input(
@@ -60,6 +63,7 @@ export const appRouter = router({
           completionTime: z.number().int().min(1),
           totalProblems: z.number().int().min(1),
           operation: z.enum(["addition", "subtraction", "multiplication", "division"]),
+          difficulty: z.enum(["easy", "medium", "hard"]),
         })
       )
       .mutation(async ({ input }) => {

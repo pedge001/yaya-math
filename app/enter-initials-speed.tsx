@@ -17,6 +17,7 @@ export default function EnterInitialsSpeedScreen() {
   const completionTime = parseInt(params.completionTime as string);
   const total = parseInt(params.total as string);
   const operation = params.operation as "addition" | "subtraction" | "multiplication" | "division";
+  const difficulty = params.difficulty as "easy" | "medium" | "hard";
 
   const [initials, setInitials] = useState(["A", "A", "A"]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -80,6 +81,7 @@ export default function EnterInitialsSpeedScreen() {
         completionTime: completionTime,
         totalProblems: total,
         operation: operation,
+        difficulty: difficulty,
       });
 
       router.push("/speed-leaderboard");

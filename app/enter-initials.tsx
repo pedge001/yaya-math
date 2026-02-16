@@ -17,6 +17,7 @@ export default function EnterInitialsScreen() {
   const correct = parseInt(params.correct as string);
   const total = parseInt(params.total as string);
   const operation = params.operation as "addition" | "subtraction" | "multiplication" | "division";
+  const difficulty = params.difficulty as "easy" | "medium" | "hard";
 
   const [initials, setInitials] = useState(["A", "A", "A"]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -78,6 +79,7 @@ export default function EnterInitialsScreen() {
         score: correct,
         totalProblems: total,
         operation: operation,
+        difficulty: difficulty,
       });
 
       router.push("/leaderboard");

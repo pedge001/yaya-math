@@ -35,6 +35,7 @@ export const leaderboard = mysqlTable("leaderboard", {
   score: int("score").notNull(),
   totalProblems: int("totalProblems").notNull(),
   operation: mysqlEnum("operation", ["addition", "subtraction", "multiplication", "division"]).notNull(),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("easy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -50,6 +51,7 @@ export const speedLeaderboard = mysqlTable("speed_leaderboard", {
   completionTime: int("completionTime").notNull(), // Time in seconds
   totalProblems: int("totalProblems").notNull(),
   operation: mysqlEnum("operation", ["addition", "subtraction", "multiplication", "division"]).notNull(),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("easy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

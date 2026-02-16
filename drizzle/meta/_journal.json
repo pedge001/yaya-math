@@ -36,6 +36,13 @@
       "when": 1770867082481,
       "tag": "0004_majestic_beyonder",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1771273273723,
+      "tag": "0005_unique_juggernaut",
+      "breakpoints": true
     }
   ]
 }
