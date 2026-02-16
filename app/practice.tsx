@@ -15,6 +15,7 @@ import { useColors } from "@/hooks/use-colors";
 import { playSound } from "@/lib/sound-manager";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
+type Difficulty = "easy" | "medium" | "hard";
 
 interface Problem {
   num1: number;
@@ -25,29 +26,41 @@ interface Problem {
 
 const TOTAL_PROBLEMS = 50;
 
-function generateProblem(operations: Operation[]): Problem {
+function getDifficultyRange(difficulty: Difficulty): number {
+  switch (difficulty) {
+    case "easy":
+      return 12;
+    case "medium":
+      return 20;
+    case "hard":
+      return 30;
+  }
+}
+
+function generateProblem(operations: Operation[], difficulty: Difficulty): Problem {
   const operation = operations[Math.floor(Math.random() * operations.length)];
+  const maxNum = getDifficultyRange(difficulty);
   let num1: number, num2: number, answer: number;
 
   switch (operation) {
     case "addition":
-      num1 = Math.floor(Math.random() * 99) + 1;
-      num2 = Math.floor(Math.random() * 99) + 1;
+      num1 = Math.floor(Math.random() * maxNum) + 1;
+      num2 = Math.floor(Math.random() * maxNum) + 1;
       answer = num1 + num2;
       break;
     case "subtraction":
-      num1 = Math.floor(Math.random() * 99) + 1;
+      num1 = Math.floor(Math.random() * maxNum) + 1;
       num2 = Math.floor(Math.random() * num1) + 1;
       answer = num1 - num2;
       break;
     case "multiplication":
-      num1 = Math.floor(Math.random() * 10) + 1;
-      num2 = Math.floor(Math.random() * 10) + 1;
+      num1 = Math.floor(Math.random() * maxNum) + 1;
+      num2 = Math.floor(Math.random() * maxNum) + 1;
       answer = num1 * num2;
       break;
     case "division":
-      num2 = Math.floor(Math.random() * 10) + 1;
-      answer = Math.floor(Math.random() * 10) + 1;
+      num2 = Math.floor(Math.random() * maxNum) + 1;
+      answer = Math.floor(Math.random() * maxNum) + 1;
       num1 = num2 * answer;
       break;
   }
@@ -75,6 +88,7 @@ export default function PracticeScreen() {
 
   const operations = (params.operations as string)?.split(",") as Operation[];
   const isSpeedMode = params.speedMode === "true";
+  const difficulty = (params.difficulty as Difficulty) || "easy";
 
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -89,10 +103,10 @@ export default function PracticeScreen() {
   useEffect(() => {
     const generatedProblems: Problem[] = [];
     for (let i = 0; i < TOTAL_PROBLEMS; i++) {
-      generatedProblems.push(generateProblem(operations));
+      generatedProblems.push(generateProblem(operations, difficulty));
     }
     setProblems(generatedProblems);
-  }, []);
+  }, [difficulty]);
 
   // Timer for speed mode
   useEffect(() => {

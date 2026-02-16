@@ -23,6 +23,7 @@ export default function ResultsScreen() {
   const operations = params.operations as string;
   const isSpeedMode = params.speedMode === "true";
   const completionTime = params.completionTime ? parseInt(params.completionTime as string) : 0;
+  const difficulty = (params.difficulty as string) || "easy";
   
   // Parse first operation for leaderboard checking
   const firstOperation = operations.split(",")[0] as "addition" | "subtraction" | "multiplication" | "division";

@@ -79,3 +79,8 @@
 - [x] Fix speed mode toggle visibility
 - [x] Fix practice screen layout - prevent problem and keypad overlap
 - [x] Fix speed mode timer layout - prevent pushing elements down
+- [x] Add difficulty level selection UI (Easy, Medium, Hard)
+- [x] Implement difficulty state management
+- [x] Update problem generator to use difficulty ranges
+- [x] Update practice screen to use selected difficulty
+- [x] Test difficulty levels end-to-end
