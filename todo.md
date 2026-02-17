@@ -114,3 +114,5 @@
 - [x] Rename theme.config.js to theme.config.cjs
 - [x] Update imports to use .cjs extensions
 - [x] Remove app/dev directory (dev tools not needed for production)
+- [x] Fix NativeWind styling broken in iOS production build
+- [x] Restore metro.config.js with EAS Build compatibility
