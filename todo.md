@@ -118,3 +118,4 @@
 - [x] Restore metro.config.js with EAS Build compatibility
 - [x] Switch to Babel-based NativeWind processing for EAS Build compatibility
 - [x] Remove metro.config.js - Babel plugin handles NativeWind processing
+- [x] Create metro.config.cjs with NativeWind in pure CommonJS format for EAS Build
