@@ -132,3 +132,5 @@
 - [ ] Remove NativeWind dependencies
 - [ ] Remove tailwind and metro config files
 - [ ] Test all screens for styling accuracy
+- [x] Create dedicated privacy policy screen (app/privacy-policy.tsx)
+- [x] Update profile screen to show brand colored link to privacy policy
