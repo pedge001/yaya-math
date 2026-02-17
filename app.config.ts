@@ -50,6 +50,11 @@ const config = {
   cli: {
     appVersionSource: "remote",
   },
+  extra: {
+    eas: {
+      projectId: "74bab680-c67c-4fb3-a741-1ab8fcc8a394",
+    },
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,

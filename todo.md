@@ -96,3 +96,5 @@
 - [x] Create privacy policy page in Profile tab
 - [x] Fix EAS Build configuration - add appVersionSource
 - [x] Add public privacy policy endpoint to Railway server
+- [x] Add EAS project ID to app.config.ts
+- [x] Verify appVersionSource configuration
