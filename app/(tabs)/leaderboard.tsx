@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
-import { Text, View, TouchableOpacity, ScrollView, Platform } from "react-native";
+import { useState } from "react";
+import { Text, View, TouchableOpacity, ScrollView, Platform, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { useColors } from "@/hooks/use-colors";
+import { useThemeColors, spacing, borderRadius, fontSize, fontWeight } from "@/constants/styles";
 import { trpc } from "@/lib/trpc";
 import { playSound } from "@/lib/sound-manager";
 
@@ -21,7 +21,125 @@ export default function LeaderboardScreen() {
   const [selectedOperation, setSelectedOperation] = useState<Operation>("addition");
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("easy");
   const [isSpeedMode, setIsSpeedMode] = useState(false);
-  const colors = useColors();
+  const colors = useThemeColors();
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: spacing.lg,
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    title: {
+      fontSize: fontSize['3xl'],
+      fontWeight: fontWeight.bold,
+      color: colors.foreground,
+      marginBottom: spacing.sm,
+    },
+    subtitle: {
+      fontSize: fontSize.base,
+      color: colors.muted,
+    },
+    modeToggleRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    modeToggleButton: {
+      flex: 1,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.lg,
+    },
+    modeToggleText: {
+      textAlign: 'center',
+      fontWeight: fontWeight.bold,
+    },
+    difficultyRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    difficultyButton: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.lg,
+    },
+    difficultyText: {
+      textAlign: 'center',
+      fontWeight: fontWeight.semibold,
+      fontSize: fontSize.sm,
+    },
+    operationRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    operationButton: {
+      flex: 1,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.lg,
+    },
+    operationText: {
+      textAlign: 'center',
+      fontWeight: fontWeight.bold,
+      fontSize: fontSize.lg,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    leaderboardList: {
+      gap: spacing.md,
+    },
+    leaderboardEntry: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: spacing.md,
+      borderRadius: borderRadius.lg,
+    },
+    entryLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      flex: 1,
+    },
+    medalText: {
+      fontSize: 24,
+      width: 32,
+      textAlign: 'center',
+    },
+    initialsText: {
+      fontSize: fontSize.lg,
+      fontWeight: fontWeight.bold,
+      color: colors.foreground,
+    },
+    dateText: {
+      fontSize: fontSize.xs,
+      color: colors.muted,
+    },
+    scoreText: {
+      fontSize: 24,
+      fontWeight: fontWeight.bold,
+      color: colors.primary,
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xxl,
+    },
+    emptyStateText: {
+      fontSize: fontSize.lg,
+      color: colors.muted,
+    },
+    emptyStateSubtext: {
+      fontSize: fontSize.sm,
+      color: colors.muted,
+      marginTop: spacing.sm,
+    },
+  });
 
   const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery(
     { operation: selectedOperation, difficulty: selectedDifficulty },
@@ -41,16 +159,16 @@ export default function LeaderboardScreen() {
   };
 
   return (
-    <ScreenContainer className="p-6">
-      <View className="flex-1">
+    <ScreenContainer>
+      <View style={styles.container}>
         {/* Header */}
-        <View className="items-center mb-6">
-          <Text className="text-3xl font-bold text-foreground mb-2">🏆 Leaderboard</Text>
-          <Text className="text-base text-muted">Top Scores</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>🏆 Leaderboard</Text>
+          <Text style={styles.subtitle}>Top Scores</Text>
         </View>
 
         {/* Mode Toggle */}
-        <View className="flex-row gap-2 mb-6">
+        <View style={styles.modeToggleRow}>
           <TouchableOpacity
             onPress={() => {
               if (Platform.OS !== "web") {
@@ -59,16 +177,20 @@ export default function LeaderboardScreen() {
               }
               setIsSpeedMode(false);
             }}
-            className="flex-1 py-3 rounded-lg"
-            style={{
-              backgroundColor: !isSpeedMode ? colors.primary : colors.surface,
-            }}
+            style={[
+              styles.modeToggleButton,
+              {
+                backgroundColor: !isSpeedMode ? colors.primary : colors.surface,
+              },
+            ]}
           >
             <Text
-              className="text-center font-bold"
-              style={{
-                color: !isSpeedMode ? "#000000" : colors.foreground,
-              }}
+              style={[
+                styles.modeToggleText,
+                {
+                  color: !isSpeedMode ? "#000000" : colors.foreground,
+                },
+              ]}
             >
               Score
             </Text>
@@ -81,16 +203,20 @@ export default function LeaderboardScreen() {
               }
               setIsSpeedMode(true);
             }}
-            className="flex-1 py-3 rounded-lg"
-            style={{
-              backgroundColor: isSpeedMode ? colors.primary : colors.surface,
-            }}
+            style={[
+              styles.modeToggleButton,
+              {
+                backgroundColor: isSpeedMode ? colors.primary : colors.surface,
+              },
+            ]}
           >
             <Text
-              className="text-center font-bold"
-              style={{
-                color: isSpeedMode ? "#000000" : colors.foreground,
-              }}
+              style={[
+                styles.modeToggleText,
+                {
+                  color: isSpeedMode ? "#000000" : colors.foreground,
+                },
+              ]}
             >
               Speed
             </Text>
@@ -98,7 +224,7 @@ export default function LeaderboardScreen() {
         </View>
 
         {/* Difficulty Tabs */}
-        <View className="flex-row gap-2 mb-4">
+        <View style={styles.difficultyRow}>
           {(["easy", "medium", "hard"] as Difficulty[]).map((diff) => (
             <TouchableOpacity
               key={diff}
@@ -109,16 +235,20 @@ export default function LeaderboardScreen() {
                 }
                 setSelectedDifficulty(diff);
               }}
-              className="flex-1 py-2 rounded-lg"
-              style={{
-                backgroundColor: selectedDifficulty === diff ? colors.primary : colors.surface,
-              }}
+              style={[
+                styles.difficultyButton,
+                {
+                  backgroundColor: selectedDifficulty === diff ? colors.primary : colors.surface,
+                },
+              ]}
             >
               <Text
-                className="text-center font-semibold text-sm"
-                style={{
-                  color: selectedDifficulty === diff ? "#000000" : colors.foreground,
-                }}
+                style={[
+                  styles.difficultyText,
+                  {
+                    color: selectedDifficulty === diff ? "#000000" : colors.foreground,
+                  },
+                ]}
               >
                 {diff.charAt(0).toUpperCase() + diff.slice(1)}
               </Text>
@@ -127,7 +257,7 @@ export default function LeaderboardScreen() {
         </View>
 
         {/* Operation Tabs */}
-        <View className="flex-row gap-2 mb-6">
+        <View style={styles.operationRow}>
           {operations.map((op) => (
             <TouchableOpacity
               key={op.id}
@@ -138,16 +268,20 @@ export default function LeaderboardScreen() {
                 }
                 setSelectedOperation(op.id);
               }}
-              className="flex-1 py-3 rounded-lg"
-              style={{
-                backgroundColor: selectedOperation === op.id ? colors.primary : colors.surface,
-              }}
+              style={[
+                styles.operationButton,
+                {
+                  backgroundColor: selectedOperation === op.id ? colors.primary : colors.surface,
+                },
+              ]}
             >
               <Text
-                className="text-center font-bold text-lg"
-                style={{
-                  color: selectedOperation === op.id ? "#000000" : colors.foreground,
-                }}
+                style={[
+                  styles.operationText,
+                  {
+                    color: selectedOperation === op.id ? "#000000" : colors.foreground,
+                  },
+                ]}
               >
                 {op.symbol}
               </Text>
@@ -156,34 +290,33 @@ export default function LeaderboardScreen() {
         </View>
 
         {/* Leaderboard List */}
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {currentData && currentData.length > 0 ? (
-            <View className="gap-3">
+            <View style={styles.leaderboardList}>
               {currentData.map((entry: any, index: number) => (
                 <View
                   key={index}
-                  className="flex-row items-center justify-between p-4 rounded-lg"
-                  style={{ backgroundColor: colors.surface }}
+                  style={[styles.leaderboardEntry, { backgroundColor: colors.surface }]}
                 >
-                  <View className="flex-row items-center gap-3 flex-1">
-                    <Text className="text-2xl w-8 text-center">{getMedalEmoji(index + 1)}</Text>
+                  <View style={styles.entryLeft}>
+                    <Text style={styles.medalText}>{getMedalEmoji(index + 1)}</Text>
                     <View>
-                      <Text className="text-lg font-bold text-foreground">{entry.initials}</Text>
-                      <Text className="text-xs text-muted">
+                      <Text style={styles.initialsText}>{entry.initials}</Text>
+                      <Text style={styles.dateText}>
                         {new Date(entry.createdAt).toLocaleDateString()}
                       </Text>
                     </View>
                   </View>
-                  <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
+                  <Text style={styles.scoreText}>
                     {isSpeedMode ? `${Math.floor(entry.time / 60)}:${(entry.time % 60).toString().padStart(2, "0")}` : entry.score}
                   </Text>
                 </View>
               ))}
             </View>
           ) : (
-            <View className="flex-1 items-center justify-center py-8">
-              <Text className="text-lg text-muted">No scores yet</Text>
-              <Text className="text-sm text-muted mt-2">Be the first to score!</Text>
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No scores yet</Text>
+              <Text style={styles.emptyStateSubtext}>Be the first to score!</Text>
             </View>
           )}
         </ScrollView>

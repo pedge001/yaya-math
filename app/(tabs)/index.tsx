@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Text, View, TouchableOpacity, Platform } from "react-native";
+import { Text, View, TouchableOpacity, Platform, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { useColors } from "@/hooks/use-colors";
+import { useThemeColors, spacing, borderRadius, fontSize, fontWeight } from "@/constants/styles";
 import { playSound } from "@/lib/sound-manager";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
@@ -33,8 +33,117 @@ export default function OperationSelectionScreen() {
   const [selectedOperations, setSelectedOperations] = useState<Set<Operation>>(new Set());
   const [isSpeedMode, setIsSpeedMode] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
-  const colors = useColors();
+  const colors = useThemeColors();
   const router = useRouter();
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'space-between',
+      padding: spacing.md,
+    },
+    header: {
+      alignItems: 'center',
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+    },
+    title: {
+      fontSize: fontSize['3xl'],
+      fontWeight: fontWeight.bold,
+      color: colors.foreground,
+    },
+    subtitle: {
+      fontSize: fontSize.sm,
+      color: colors.muted,
+      marginTop: spacing.xs,
+    },
+    operationsContainer: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    operationsGrid: {
+      gap: spacing.md,
+    },
+    operationRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    operationCard: {
+      flex: 1,
+      aspectRatio: 1,
+      borderRadius: borderRadius.xl,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+    },
+    operationSymbol: {
+      fontSize: 48,
+      marginBottom: spacing.xs,
+    },
+    operationLabel: {
+      fontSize: fontSize.xs,
+      fontWeight: fontWeight.medium,
+      color: colors.foreground,
+    },
+    speedModeContainer: {
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    speedModeButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.full,
+      borderWidth: 2,
+    },
+    speedModeEmoji: {
+      fontSize: fontSize.xl,
+    },
+    speedModeText: {
+      fontSize: fontSize.sm,
+      fontWeight: fontWeight.semibold,
+    },
+    difficultyContainer: {
+      marginBottom: spacing.md,
+    },
+    difficultyLabel: {
+      fontSize: fontSize.xs,
+      color: colors.muted,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    difficultyRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      justifyContent: 'center',
+    },
+    difficultyButton: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.lg,
+      borderWidth: 2,
+    },
+    difficultyButtonText: {
+      fontSize: fontSize.xs,
+      fontWeight: fontWeight.semibold,
+    },
+    difficultyRange: {
+      fontSize: fontSize.xs,
+      color: colors.muted,
+      textAlign: 'center',
+    },
+    startButton: {
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.full,
+    },
+    startButtonText: {
+      textAlign: 'center',
+      fontSize: fontSize.base,
+      fontWeight: fontWeight.bold,
+    },
+  });
 
   const toggleOperation = (operation: Operation) => {
     if (Platform.OS !== "web") {
@@ -78,55 +187,59 @@ export default function OperationSelectionScreen() {
   };
 
   return (
-    <ScreenContainer className="p-4">
-      <View className="flex-1 justify-between">
+    <ScreenContainer>
+      <View style={styles.container}>
         {/* Header */}
-        <View className="items-center pt-2 pb-4">
-          <Text className="text-3xl font-bold text-foreground">Math Practice</Text>
-          <Text className="text-sm text-muted mt-1">Choose operations to practice</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>Math Practice</Text>
+          <Text style={styles.subtitle}>Choose operations to practice</Text>
         </View>
 
-        {/* Operation Cards Grid - Smaller */}
-        <View className="flex-1 justify-center">
-          <View className="gap-3">
-            <View className="flex-row gap-3">
+        {/* Operation Cards Grid */}
+        <View style={styles.operationsContainer}>
+          <View style={styles.operationsGrid}>
+            <View style={styles.operationRow}>
               {operations.slice(0, 2).map((op) => {
                 const isSelected = selectedOperations.has(op.id);
                 return (
                   <TouchableOpacity
                     key={op.id}
                     onPress={() => toggleOperation(op.id)}
-                    className="flex-1 aspect-square bg-surface rounded-xl items-center justify-center border-2"
-                    style={{
-                      borderColor: isSelected ? colors.primary : colors.border,
-                      backgroundColor: isSelected ? `${colors.primary}20` : colors.surface,
-                    }}
+                    style={[
+                      styles.operationCard,
+                      {
+                        borderColor: isSelected ? colors.primary : colors.border,
+                        backgroundColor: isSelected ? `${colors.primary}20` : colors.surface,
+                      },
+                    ]}
                   >
-                    <Text className="text-5xl mb-1" style={{ color: colors.primary }}>
+                    <Text style={[styles.operationSymbol, { color: colors.primary }]}>
                       {op.symbol}
                     </Text>
-                    <Text className="text-xs font-medium text-foreground">{op.label}</Text>
+                    <Text style={styles.operationLabel}>{op.label}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-            <View className="flex-row gap-3">
+            <View style={styles.operationRow}>
               {operations.slice(2, 4).map((op) => {
                 const isSelected = selectedOperations.has(op.id);
                 return (
                   <TouchableOpacity
                     key={op.id}
                     onPress={() => toggleOperation(op.id)}
-                    className="flex-1 aspect-square bg-surface rounded-xl items-center justify-center border-2"
-                    style={{
-                      borderColor: isSelected ? colors.primary : colors.border,
-                      backgroundColor: isSelected ? `${colors.primary}20` : colors.surface,
-                    }}
+                    style={[
+                      styles.operationCard,
+                      {
+                        borderColor: isSelected ? colors.primary : colors.border,
+                        backgroundColor: isSelected ? `${colors.primary}20` : colors.surface,
+                      },
+                    ]}
                   >
-                    <Text className="text-5xl mb-1" style={{ color: colors.primary }}>
+                    <Text style={[styles.operationSymbol, { color: colors.primary }]}>
                       {op.symbol}
                     </Text>
-                    <Text className="text-xs font-medium text-foreground">{op.label}</Text>
+                    <Text style={styles.operationLabel}>{op.label}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -135,19 +248,23 @@ export default function OperationSelectionScreen() {
         </View>
 
         {/* Speed Mode Toggle */}
-        <View className="items-center mb-4">
+        <View style={styles.speedModeContainer}>
           <TouchableOpacity
             onPress={toggleSpeedMode}
-            className="flex-row items-center gap-2 py-2 px-4 rounded-full border-2"
-            style={{
-              borderColor: isSpeedMode ? colors.primary : "rgba(182, 255, 251, 0.3)",
-              backgroundColor: isSpeedMode ? "rgba(182, 255, 251, 0.1)" : "transparent",
-            }}
+            style={[
+              styles.speedModeButton,
+              {
+                borderColor: isSpeedMode ? colors.primary : "rgba(182, 255, 251, 0.3)",
+                backgroundColor: isSpeedMode ? "rgba(182, 255, 251, 0.1)" : "transparent",
+              },
+            ]}
           >
-            <Text className="text-xl">⚡</Text>
+            <Text style={styles.speedModeEmoji}>⚡</Text>
             <Text
-              className="text-sm font-semibold"
-              style={{ color: isSpeedMode ? colors.primary : colors.muted }}
+              style={[
+                styles.speedModeText,
+                { color: isSpeedMode ? colors.primary : colors.muted },
+              ]}
             >
               Speed Mode {isSpeedMode ? "ON" : "OFF"}
             </Text>
@@ -155,26 +272,30 @@ export default function OperationSelectionScreen() {
         </View>
 
         {/* Difficulty Level Selection */}
-        <View className="mb-4">
-          <Text className="text-xs text-muted text-center mb-2">Difficulty</Text>
-          <View className="flex-row gap-2 justify-center">
+        <View style={styles.difficultyContainer}>
+          <Text style={styles.difficultyLabel}>Difficulty</Text>
+          <View style={styles.difficultyRow}>
             {difficultyLevels.map((level) => (
               <TouchableOpacity
                 key={level.id}
                 onPress={() => toggleDifficulty(level.id)}
-                className="px-4 py-2 rounded-lg border-2"
-                style={{
-                  borderColor: difficulty === level.id ? colors.primary : colors.border,
-                  backgroundColor: difficulty === level.id ? `${colors.primary}20` : colors.surface,
-                }}
+                style={[
+                  styles.difficultyButton,
+                  {
+                    borderColor: difficulty === level.id ? colors.primary : colors.border,
+                    backgroundColor: difficulty === level.id ? `${colors.primary}20` : colors.surface,
+                  },
+                ]}
               >
                 <Text
-                  className="text-xs font-semibold"
-                  style={{ color: difficulty === level.id ? colors.primary : colors.muted }}
+                  style={[
+                    styles.difficultyButtonText,
+                    { color: difficulty === level.id ? colors.primary : colors.muted },
+                  ]}
                 >
                   {level.label}
                 </Text>
-                <Text className="text-xs text-muted text-center">{level.range}</Text>
+                <Text style={styles.difficultyRange}>{level.range}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -184,15 +305,19 @@ export default function OperationSelectionScreen() {
         <TouchableOpacity
           onPress={startPractice}
           disabled={selectedOperations.size === 0}
-          className="py-4 rounded-full"
-          style={{
-            backgroundColor: selectedOperations.size > 0 ? colors.primary : colors.border,
-            opacity: selectedOperations.size > 0 ? 1 : 0.5,
-          }}
+          style={[
+            styles.startButton,
+            {
+              backgroundColor: selectedOperations.size > 0 ? colors.primary : colors.border,
+              opacity: selectedOperations.size > 0 ? 1 : 0.5,
+            },
+          ]}
         >
           <Text
-            className="text-center text-base font-bold"
-            style={{ color: selectedOperations.size > 0 ? "#000000" : colors.muted }}
+            style={[
+              styles.startButtonText,
+              { color: selectedOperations.size > 0 ? "#000000" : colors.muted },
+            ]}
           >
             Start Practice
           </Text>

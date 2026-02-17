@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Text, View, TouchableOpacity, Platform, ScrollView } from "react-native";
+import { Text, View, TouchableOpacity, Platform, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -11,7 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { useColors } from "@/hooks/use-colors";
+import { useThemeColors, spacing, borderRadius, fontSize, fontWeight } from "@/constants/styles";
 import { playSound } from "@/lib/sound-manager";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
@@ -84,7 +84,7 @@ function getOperationSymbol(operation: Operation): string {
 export default function PracticeScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
-  const colors = useColors();
+  const colors = useThemeColors();
 
   const operations = (params.operations as string)?.split(",") as Operation[];
   const isSpeedMode = params.speedMode === "true";
@@ -99,6 +99,109 @@ export default function PracticeScreen() {
 
   const backgroundColor = useSharedValue(colors.surface);
   const scale = useSharedValue(1);
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'space-between',
+      padding: spacing.sm,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      paddingBottom: spacing.sm,
+    },
+    headerText: {
+      fontSize: fontSize.xs,
+      color: colors.muted,
+    },
+    timerContainer: {
+      alignItems: 'center',
+    },
+    timerLabel: {
+      fontSize: fontSize.xs,
+      color: colors.muted,
+    },
+    timerText: {
+      fontSize: fontSize.lg,
+      fontWeight: fontWeight.bold,
+      color: colors.primary,
+    },
+    problemContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.md,
+    },
+    problemCard: {
+      padding: spacing.md,
+      borderRadius: borderRadius.xl,
+    },
+    problemText: {
+      fontSize: 28,
+      fontWeight: fontWeight.bold,
+      color: colors.foreground,
+      textAlign: 'center',
+    },
+    answerInputContainer: {
+      height: 40,
+      width: 128,
+      borderBottomWidth: 4,
+      borderColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: spacing.sm,
+    },
+    answerText: {
+      fontSize: fontSize['2xl'],
+      fontWeight: fontWeight.bold,
+      color: colors.foreground,
+    },
+    keypadContainer: {
+      gap: spacing.sm,
+    },
+    keypadRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    keypadButton: {
+      flex: 1,
+      aspectRatio: 1,
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    keypadButtonText: {
+      fontSize: fontSize['2xl'],
+      fontWeight: fontWeight.semibold,
+      color: colors.foreground,
+    },
+    backspaceText: {
+      fontSize: fontSize.xl,
+      fontWeight: fontWeight.semibold,
+      color: colors.foreground,
+    },
+    submitButton: {
+      flex: 1,
+      aspectRatio: 1,
+      borderRadius: borderRadius.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    submitButtonText: {
+      fontSize: fontSize.lg,
+      fontWeight: fontWeight.bold,
+    },
+    loadingContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    loadingText: {
+      fontSize: fontSize.xl,
+      color: colors.muted,
+    },
+  });
 
   useEffect(() => {
     const generatedProblems: Problem[] = [];
@@ -184,8 +287,10 @@ export default function PracticeScreen() {
 
   if (problems.length === 0) {
     return (
-      <ScreenContainer className="items-center justify-center">
-        <Text className="text-xl text-muted">Loading...</Text>
+      <ScreenContainer>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
       </ScreenContainer>
     );
   }
@@ -193,96 +298,98 @@ export default function PracticeScreen() {
   const currentProblem = problems[currentProblemIndex];
 
   return (
-    <ScreenContainer className="p-2">
-      <View className="flex-1 justify-between">
+    <ScreenContainer>
+      <View style={styles.container}>
         {/* Header */}
-        <View className="flex-row justify-between items-start pb-2">
+        <View style={styles.header}>
           <View>
-            <Text className="text-xs text-muted">Q{currentProblemIndex + 1}/{TOTAL_PROBLEMS}</Text>
+            <Text style={styles.headerText}>Q{currentProblemIndex + 1}/{TOTAL_PROBLEMS}</Text>
           </View>
           {isSpeedMode && (
-            <View className="items-center">
-              <Text className="text-xs text-muted">TIME</Text>
-              <Text className="text-lg font-bold" style={{ color: colors.primary }}>
+            <View style={styles.timerContainer}>
+              <Text style={styles.timerLabel}>TIME</Text>
+              <Text style={styles.timerText}>
                 {Math.floor(elapsedTime / 60)}:{String(elapsedTime % 60).padStart(2, "0")}
               </Text>
             </View>
           )}
           <View>
-            <Text className="text-xs text-muted">Score: {correctCount}/{currentProblemIndex}</Text>
+            <Text style={styles.headerText}>Score: {correctCount}/{currentProblemIndex}</Text>
           </View>
         </View>
 
         {/* Problem */}
-        <View className="items-center justify-center py-3">
-          <Animated.View style={animatedStyle} className="p-3 rounded-xl">
-            <Text className="text-3xl font-bold text-foreground text-center">
+        <View style={styles.problemContainer}>
+          <Animated.View style={[animatedStyle, styles.problemCard]}>
+            <Text style={styles.problemText}>
               {currentProblem.num1} {getOperationSymbol(currentProblem.operation)} {currentProblem.num2} =
             </Text>
-            <View className="h-10 w-32 border-b-4 items-center justify-center mt-2" style={{ borderColor: colors.primary }}>
-              <Text className="text-2xl font-bold text-foreground">{userAnswer || " "}</Text>
+            <View style={styles.answerInputContainer}>
+              <Text style={styles.answerText}>{userAnswer || " "}</Text>
             </View>
           </Animated.View>
         </View>
 
         {/* Keypad */}
-        <View className="gap-2">
-          <View className="flex-row gap-2">
+        <View style={styles.keypadContainer}>
+          <View style={styles.keypadRow}>
             {[1, 2, 3].map((num) => (
               <TouchableOpacity
                 key={num}
                 onPress={() => handleNumberPress(num.toString())}
-                className="flex-1 aspect-square bg-surface rounded-lg items-center justify-center"
+                style={styles.keypadButton}
               >
-                <Text className="text-2xl font-semibold text-foreground">{num}</Text>
+                <Text style={styles.keypadButtonText}>{num}</Text>
               </TouchableOpacity>
             ))}
           </View>
-          <View className="flex-row gap-2">
+          <View style={styles.keypadRow}>
             {[4, 5, 6].map((num) => (
               <TouchableOpacity
                 key={num}
                 onPress={() => handleNumberPress(num.toString())}
-                className="flex-1 aspect-square bg-surface rounded-lg items-center justify-center"
+                style={styles.keypadButton}
               >
-                <Text className="text-2xl font-semibold text-foreground">{num}</Text>
+                <Text style={styles.keypadButtonText}>{num}</Text>
               </TouchableOpacity>
             ))}
           </View>
-          <View className="flex-row gap-2">
+          <View style={styles.keypadRow}>
             {[7, 8, 9].map((num) => (
               <TouchableOpacity
                 key={num}
                 onPress={() => handleNumberPress(num.toString())}
-                className="flex-1 aspect-square bg-surface rounded-lg items-center justify-center"
+                style={styles.keypadButton}
               >
-                <Text className="text-2xl font-semibold text-foreground">{num}</Text>
+                <Text style={styles.keypadButtonText}>{num}</Text>
               </TouchableOpacity>
             ))}
           </View>
-          <View className="flex-row gap-2">
+          <View style={styles.keypadRow}>
             <TouchableOpacity
               onPress={handleBackspace}
-              className="flex-1 aspect-square bg-surface rounded-lg items-center justify-center"
+              style={styles.keypadButton}
             >
-              <Text className="text-xl font-semibold text-foreground">←</Text>
+              <Text style={styles.backspaceText}>←</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleNumberPress("0")}
-              className="flex-1 aspect-square bg-surface rounded-lg items-center justify-center"
+              style={styles.keypadButton}
             >
-              <Text className="text-2xl font-semibold text-foreground">0</Text>
+              <Text style={styles.keypadButtonText}>0</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSubmit}
               disabled={userAnswer === ""}
-              className="flex-1 aspect-square rounded-lg items-center justify-center"
-              style={{
-                backgroundColor: userAnswer !== "" ? colors.primary : colors.border,
-                opacity: userAnswer !== "" ? 1 : 0.5,
-              }}
+              style={[
+                styles.submitButton,
+                {
+                  backgroundColor: userAnswer !== "" ? colors.primary : colors.border,
+                  opacity: userAnswer !== "" ? 1 : 0.5,
+                },
+              ]}
             >
-              <Text className="text-lg font-bold" style={{ color: userAnswer !== "" ? "#000000" : colors.muted }}>
+              <Text style={[styles.submitButtonText, { color: userAnswer !== "" ? "#000000" : colors.muted }]}>
                 ✓
               </Text>
             </TouchableOpacity>

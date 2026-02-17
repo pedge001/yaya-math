@@ -119,3 +119,16 @@
 - [x] Switch to Babel-based NativeWind processing for EAS Build compatibility
 - [x] Remove metro.config.js - Babel plugin handles NativeWind processing
 - [x] Create metro.config.cjs with NativeWind in pure CommonJS format for EAS Build
+- [x] Create centralized theme system with StyleSheet
+- [x] Convert home screen to StyleSheet
+- [x] Convert practice screen to StyleSheet
+- [x] Convert leaderboard screen to StyleSheet
+- [x] Convert achievements screen to StyleSheet
+- [ ] Convert daily challenge screen to StyleSheet
+- [x] Convert profile screen to StyleSheet
+- [ ] Convert ScreenContainer component to StyleSheet
+- [ ] Convert ThemedView component to StyleSheet
+- [ ] Convert all other shared components to StyleSheet
+- [ ] Remove NativeWind dependencies
+- [ ] Remove tailwind and metro config files
+- [ ] Test all screens for styling accuracy
