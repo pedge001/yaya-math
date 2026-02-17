@@ -116,3 +116,5 @@
 - [x] Remove app/dev directory (dev tools not needed for production)
 - [x] Fix NativeWind styling broken in iOS production build
 - [x] Restore metro.config.js with EAS Build compatibility
+- [x] Switch to Babel-based NativeWind processing for EAS Build compatibility
+- [x] Remove metro.config.js - Babel plugin handles NativeWind processing
