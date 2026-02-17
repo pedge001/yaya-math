@@ -236,3 +236,27 @@ export async function addDailyChallengeEntry(entry: InsertDailyChallengeEntry) {
     return { success: false, error: "Failed to add entry" };
   }
 }
+
+/**
+ * Reset all leaderboard tables (for admin use)
+ */
+export async function resetAllLeaderboards() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot reset leaderboards: database not available");
+    return { success: false, error: "Database not available" };
+  }
+
+  try {
+    // Delete all entries from all three leaderboard tables
+    await db.delete(leaderboard);
+    await db.delete(speedLeaderboard);
+    await db.delete(dailyChallengeLeaderboard);
+    
+    console.log("[Database] All leaderboards reset successfully");
+    return { success: true, message: "All leaderboards reset successfully" };
+  } catch (error) {
+    console.error("[Database] Failed to reset leaderboards:", error);
+    return { success: false, error: "Failed to reset leaderboards" };
+  }
+}

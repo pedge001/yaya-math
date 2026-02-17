@@ -134,3 +134,9 @@
 - [ ] Test all screens for styling accuracy
 - [x] Create dedicated privacy policy screen (app/privacy-policy.tsx)
 - [x] Update profile screen to show brand colored link to privacy policy
+- [ ] Add public /privacy route to server for Railway deployment
+- [ ] Create HTML privacy policy page viewable in browser
+- [x] Create /leaderboardadmin webpage with manual reset button
+- [x] Add API endpoint to reset leaderboard data
+- [x] Add password protection to admin page
+- [x] Prepare for future weekly automated reset job
