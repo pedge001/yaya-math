@@ -41,6 +41,7 @@ const env = {
 const config = {
   name: env.appName,
   slug: env.appSlug,
+  owner: "pedge001",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",

@@ -100,3 +100,5 @@
 - [x] Verify appVersionSource configuration
 - [x] Fix metro.config.js loading error for EAS Build
 - [x] Create eas.json with appVersionSource configuration
+- [x] Add owner field to app.config.ts for EAS Build
+- [x] Simplify metro.config.js to fix EAS Build loading
