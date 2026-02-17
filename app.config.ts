@@ -38,7 +38,7 @@ const env = {
   androidPackage: bundleId,
 };
 
-const config: ExpoConfig = {
+const config = {
   name: env.appName,
   slug: env.appSlug,
   version: "1.0.0",
@@ -47,6 +47,9 @@ const config: ExpoConfig = {
   scheme: env.scheme,
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
+  cli: {
+    appVersionSource: "remote",
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
