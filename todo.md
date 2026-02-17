@@ -108,3 +108,9 @@
 - [x] Replace metro.config.js with plain Expo config (removed NativeWind wrapper)
 - [x] Investigate actual EAS Build metro.config.js loading failure
 - [x] Implement verified fix for metro config - REMOVED metro.config.js entirely
+- [x] Rename babel.config.js to babel.config.cjs for CommonJS compatibility
+- [x] Check other config files for CommonJS/ESM conflicts
+- [x] Rename tailwind.config.js to tailwind.config.cjs
+- [x] Rename theme.config.js to theme.config.cjs
+- [x] Update imports to use .cjs extensions
+- [x] Remove app/dev directory (dev tools not needed for production)
