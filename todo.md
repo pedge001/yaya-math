@@ -95,3 +95,4 @@
 - [x] Add Profile tab to bottom navigation
 - [x] Create privacy policy page in Profile tab
 - [x] Fix EAS Build configuration - add appVersionSource
+- [x] Add public privacy policy endpoint to Railway server

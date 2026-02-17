@@ -65,6 +65,99 @@ async function startServer() {
     res.json({ ok: true, timestamp: Date.now() });
   });
 
+  // Privacy policy endpoint for App Store submission
+  app.get("/privacy", (_req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YaYa Math - Privacy Policy</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      color: #B6FFFB;
+      background: #000;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    h2 {
+      color: #000;
+      margin-top: 30px;
+      border-bottom: 2px solid #B6FFFB;
+      padding-bottom: 10px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin: 10px 0;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      color: #666;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>YaYa Math Privacy Policy</h1>
+  
+  <h2>Data Collection</h2>
+  <p>YaYa Math collects minimal data to enable competitive gameplay. When you submit scores to the leaderboard, we collect:</p>
+  <ul>
+    <li>Your 3-character initials (chosen by you)</li>
+    <li>Your score and completion time</li>
+    <li>The operation type and difficulty level</li>
+  </ul>
+
+  <h2>Data Usage</h2>
+  <p>Your data is used exclusively to display global leaderboards and enable users to compete against one another. We do not:</p>
+  <ul>
+    <li>Sell your data to third parties</li>
+    <li>Use your data for advertising</li>
+    <li>Share your data with anyone outside of the app</li>
+    <li>Track your personal identity or location</li>
+  </ul>
+
+  <h2>Local Data</h2>
+  <p>The following data is stored locally on your device and never sent to our servers:</p>
+  <ul>
+    <li>Personal best scores</li>
+    <li>Achievement progress</li>
+    <li>Practice statistics and history</li>
+    <li>Daily challenge streak counter</li>
+  </ul>
+
+  <h2>Data Security</h2>
+  <p>All data transmitted to our servers is encrypted using industry-standard HTTPS protocols. Leaderboard data is stored securely and is only accessible through the app.</p>
+
+  <h2>Children's Privacy</h2>
+  <p>YaYa Math is designed for users of all ages. We do not knowingly collect personal information from children. The app only collects anonymous initials and scores for leaderboard purposes.</p>
+
+  <h2>Contact</h2>
+  <p>If you have questions about this privacy policy or your data, please contact us through the App Store.</p>
+
+  <div class="footer">
+    <p>Last updated: February 16, 2026</p>
+  </div>
+</body>
+</html>
+    `);
+  });
+
   app.use(
     "/api/trpc",
     createExpressMiddleware({
