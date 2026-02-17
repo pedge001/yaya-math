@@ -98,3 +98,5 @@
 - [x] Add public privacy policy endpoint to Railway server
 - [x] Add EAS project ID to app.config.ts
 - [x] Verify appVersionSource configuration
+- [x] Fix metro.config.js loading error for EAS Build
+- [x] Create eas.json with appVersionSource configuration
