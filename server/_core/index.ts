@@ -87,7 +87,7 @@ async function startServer() {
       color: #333;
     }
     h1 {
-      color: #B6FFFB;
+      color: #3dcfc2;
       background: #000;
       padding: 20px;
       border-radius: 8px;
@@ -96,7 +96,7 @@ async function startServer() {
     h2 {
       color: #000;
       margin-top: 30px;
-      border-bottom: 2px solid #B6FFFB;
+      border-bottom: 2px solid #3dcfc2;
       padding-bottom: 10px;
     }
     ul {
@@ -181,13 +181,13 @@ async function startServer() {
       color: #fff;
     }
     h1 {
-      color: #B6FFFB;
+      color: #3dcfc2;
       text-align: center;
       margin-bottom: 30px;
     }
     .admin-section {
       background: #1a1a1a;
-      border: 2px solid #B6FFFB;
+      border: 2px solid #3dcfc2;
       border-radius: 12px;
       padding: 30px;
       margin-bottom: 20px;
@@ -199,7 +199,7 @@ async function startServer() {
       width: 100%;
       padding: 12px;
       font-size: 16px;
-      border: 2px solid #B6FFFB;
+      border: 2px solid #3dcfc2;
       border-radius: 8px;
       background: #000;
       color: #fff;
@@ -222,7 +222,7 @@ async function startServer() {
       margin-top: 10px;
     }
     .btn-unlock {
-      background: #B6FFFB;
+      background: #3dcfc2;
       color: #000;
     }
     .btn-unlock:hover {

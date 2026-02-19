@@ -144,3 +144,4 @@
 - [ ] Make OAuth optional for leaderboard-only API functionality
 - [x] Fix Apple rejection: Remove background audio capability (UIBackgroundModes)
 - [x] Verify no unnecessary background modes are enabled
+- [x] Update all brand colors to #3dcfc2 (primary, tint, links, accents)

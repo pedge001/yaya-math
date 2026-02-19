@@ -4,7 +4,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 // Theme colors
 export const Colors = {
   light: {
-    primary: '#0a7ea4',
+    primary: '#3dcfc2',
     background: '#ffffff',
     surface: '#f5f5f5',
     foreground: '#11181C',
@@ -13,10 +13,10 @@ export const Colors = {
     success: '#22C55E',
     warning: '#F59E0B',
     error: '#EF4444',
-    tint: '#0a7ea4',
+    tint: '#3dcfc2',
   },
   dark: {
-    primary: '#0a7ea4',
+    primary: '#3dcfc2',
     background: '#151718',
     surface: '#1e2022',
     foreground: '#ECEDEE',
@@ -25,7 +25,7 @@ export const Colors = {
     success: '#4ADE80',
     warning: '#FBBF24',
     error: '#F87171',
-    tint: '#0a7ea4',
+    tint: '#3dcfc2',
   },
 };
 
@@ -52,19 +52,24 @@ export const spacing = {
   md: 16,
   lg: 24,
   xl: 32,
-  xxl: 48,
+  '2xl': 40,
+  '3xl': 48,
+  xxl: 56,
 };
 
-// Common border radius
+// Border radius
 export const borderRadius = {
+  none: 0,
   sm: 4,
   md: 8,
   lg: 12,
   xl: 16,
+  '2xl': 24,
+  '3xl': 32,
   full: 9999,
 };
 
-// Common font sizes
+// Font sizes
 export const fontSize = {
   xs: 12,
   sm: 14,
@@ -74,87 +79,52 @@ export const fontSize = {
   '2xl': 24,
   '3xl': 30,
   '4xl': 36,
+  '5xl': 48,
 };
 
-// Common font weights
-export const fontWeight: { [key: string]: TextStyle['fontWeight'] } = {
-  normal: '400',
-  medium: '500',
-  semibold: '600',
-  bold: '700',
+// Font weights
+export const fontWeight = {
+  normal: '400' as const,
+  medium: '500' as const,
+  semibold: '600' as const,
+  bold: '700' as const,
 };
 
-// Common shadows
+// Common line heights
+export const lineHeight = {
+  tight: 1.2,
+  normal: 1.5,
+  relaxed: 1.75,
+  loose: 2,
+};
+
+// Shadows (for Android elevation)
 export const shadows = {
   sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 2,
   },
-  lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+  md: {
     elevation: 4,
   },
+  lg: {
+    elevation: 8,
+  },
+  xl: {
+    elevation: 12,
+  },
 };
-
-// Common button styles
-export const createButtonStyles = (colors: ThemeColors) => StyleSheet.create({
-  primary: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryText: {
-    color: colors.background,
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.semibold,
-  },
-  secondary: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  secondaryText: {
-    color: colors.foreground,
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.medium,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});
 
 // Common text styles
 export const createTextStyles = (colors: ThemeColors) => StyleSheet.create({
   h1: {
     fontSize: fontSize['4xl'],
     fontWeight: fontWeight.bold,
-    color: colors.foreground,
+    color: colors.primary,
   },
   h2: {
     fontSize: fontSize['3xl'],
     fontWeight: fontWeight.bold,
-    color: colors.foreground,
+    color: colors.primary,
   },
   h3: {
     fontSize: fontSize['2xl'],
