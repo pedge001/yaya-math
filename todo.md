@@ -140,3 +140,7 @@
 - [x] Add API endpoint to reset leaderboard data
 - [x] Add password protection to admin page
 - [x] Prepare for future weekly automated reset job
+- [ ] Fix Railway production server crash (missing OAUTH_SERVER_URL)
+- [ ] Make OAuth optional for leaderboard-only API functionality
+- [x] Fix Apple rejection: Remove background audio capability (UIBackgroundModes)
+- [x] Verify no unnecessary background modes are enabled
