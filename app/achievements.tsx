@@ -25,8 +25,9 @@ export default function AchievementsScreen() {
     title: {
       fontSize: 30,
       fontWeight: fontWeight.bold,
-      color: colors.foreground,
-      marginBottom: spacing.sm,
+      color: colors.primary,
+      marginBottom: spacing.lg,
+      textAlign: 'center',
     },
     subtitle: {
       fontSize: fontSize.lg,

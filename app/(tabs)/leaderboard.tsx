@@ -35,7 +35,7 @@ export default function LeaderboardScreen() {
     title: {
       fontSize: fontSize['3xl'],
       fontWeight: fontWeight.bold,
-      color: colors.foreground,
+      color: colors.primary,
       marginBottom: spacing.sm,
     },
     subtitle: {

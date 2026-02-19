@@ -19,7 +19,7 @@ export default function ProfileScreen() {
     title: {
       fontSize: 30,
       fontWeight: fontWeight.bold,
-      color: '#B6FFFB',
+      color: colors.primary,
       marginBottom: spacing.lg,
       textAlign: 'center',
     },
