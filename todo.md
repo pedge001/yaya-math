@@ -157,3 +157,4 @@
 - [x] Format My Scores list with date, operation, difficulty, and score
 - [x] Change home screen title from "Math Practice" to "YaYa Math"
 - [x] Verify title uses correct brand color #3dcfc2
+- [x] Add subtitle "Always Be Learning" under YaYa Math title on home screen

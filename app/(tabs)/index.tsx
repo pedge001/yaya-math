@@ -192,7 +192,7 @@ export default function OperationSelectionScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>YaYa Math</Text>
-          <Text style={styles.subtitle}>Choose operations to practice</Text>
+          <Text style={styles.subtitle}>Always Be Learning</Text>
         </View>
 
         {/* Operation Cards Grid */}
