@@ -150,3 +150,4 @@
 - [x] Fix leaderboard submission not working
 - [x] Add confirmation message after successful leaderboard submission
 - [ ] Test leaderboard submission end-to-end for all modes and difficulties
+- [x] Enhance loading state on leaderboard submission button with text feedback

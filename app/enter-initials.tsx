@@ -301,7 +301,18 @@ export default function EnterInitialsScreen() {
             }}
           >
             {submitScoreMutation.isPending ? (
-              <ActivityIndicator color="#000000" />
+              <View className="flex-row items-center justify-center gap-3">
+                <ActivityIndicator color="#000000" size="small" />
+                <Text
+                  className="text-center text-xl font-bold"
+                  style={{
+                    color: "#000000",
+                    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+                  }}
+                >
+                  SUBMITTING...
+                </Text>
+              </View>
             ) : (
               <Text
                 className="text-center text-xl font-bold"
