@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Text, View, TouchableOpacity, Platform, ActivityIndicator } from "react-native";
+import { Text, View, TouchableOpacity, Platform, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
@@ -69,12 +69,8 @@ export default function EnterInitialsScreen() {
   };
 
   const handleSubmit = async () => {
-    if (Platform.OS !== "web") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-
     try {
-      await submitScoreMutation.mutateAsync({
+      const result = await submitScoreMutation.mutateAsync({
         initials: initials.join(""),
         score: correct,
         totalProblems: total,
@@ -82,9 +78,62 @@ export default function EnterInitialsScreen() {
         difficulty: difficulty,
       });
 
-      router.push("/leaderboard");
+      // Check if submission was successful
+      if (result.success) {
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        
+        // Show success message
+        if (Platform.OS === "web") {
+          alert("Score submitted successfully! 🎉");
+        } else {
+          Alert.alert(
+            "Success! 🎉",
+            "Your score has been submitted to the leaderboard!",
+            [{ text: "View Leaderboard", onPress: () => router.push("/leaderboard") }]
+          );
+          return; // Don't auto-navigate, let user tap the alert button
+        }
+        router.push("/leaderboard");
+      } else {
+        // Submission failed
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+        
+        if (Platform.OS === "web") {
+          alert("Failed to submit score. Please try again.");
+        } else {
+          Alert.alert(
+            "Submission Failed",
+            result.error || "Unable to submit score. Please check your connection and try again.",
+            [
+              { text: "Try Again", style: "default" },
+              { text: "Cancel", style: "cancel", onPress: () => router.push("/") }
+            ]
+          );
+        }
+      }
     } catch (error) {
       console.error("Failed to submit score:", error);
+      
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+      
+      if (Platform.OS === "web") {
+        alert("Network error. Please check your connection and try again.");
+      } else {
+        Alert.alert(
+          "Network Error",
+          "Unable to connect to the server. Please check your internet connection.",
+          [
+            { text: "Try Again", style: "default" },
+            { text: "Cancel", style: "cancel", onPress: () => router.push("/") }
+          ]
+        );
+      }
     }
   };
 

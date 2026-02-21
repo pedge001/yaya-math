@@ -145,3 +145,8 @@
 - [x] Fix Apple rejection: Remove background audio capability (UIBackgroundModes)
 - [x] Verify no unnecessary background modes are enabled
 - [x] Update all brand colors to #3dcfc2 (primary, tint, links, accents)
+- [ ] Fix 500 error when loading app in Expo Go from local Metro bundler
+- [ ] Identify and fix failing API endpoint causing 500 response
+- [x] Fix leaderboard submission not working
+- [x] Add confirmation message after successful leaderboard submission
+- [ ] Test leaderboard submission end-to-end for all modes and difficulties
