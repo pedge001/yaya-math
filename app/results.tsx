@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
+import { BackButton } from "@/components/back-button";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { updateStreak } from "@/lib/streak-tracker";
@@ -125,6 +126,9 @@ export default function ResultsScreen() {
       <View className="flex-1 justify-between">
         {/* Header */}
         <View className="items-center pt-8">
+          <View className="absolute left-0 top-0">
+            <BackButton />
+          </View>
           <Text className="text-3xl font-bold text-foreground mb-2">Practice Complete!</Text>
         </View>
 

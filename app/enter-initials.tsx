@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
+import { BackButton } from "@/components/back-button";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { addSubmissionToHistory } from "@/lib/submission-history";
@@ -97,16 +98,19 @@ export default function EnterInitialsScreen() {
         
         // Show success message
         if (Platform.OS === "web") {
-          alert("Score submitted successfully! 🎉");
+          alert("Congrats! 🎉\nYour score has been submitted!");
         } else {
           Alert.alert(
-            "Success! 🎉",
+            "Congrats! 🎉",
             "Your score has been submitted to the leaderboard!",
-            [{ text: "View Leaderboard", onPress: () => router.push("/leaderboard") }]
+            [{ text: "OK" }]
           );
-          return; // Don't auto-navigate, let user tap the alert button
         }
-        router.push("/leaderboard");
+        
+        // Auto-navigate to leaderboard after delay
+        setTimeout(() => {
+          router.push("/(tabs)/leaderboard");
+        }, 2000);
       } else {
         // Submission failed
         if (Platform.OS !== "web") {
@@ -153,6 +157,9 @@ export default function EnterInitialsScreen() {
       <View className="flex-1 justify-between">
         {/* Header */}
         <View className="items-center pt-8">
+          <View className="absolute left-0 top-0">
+            <BackButton />
+          </View>
           <Text
             className="text-4xl font-bold mb-4"
             style={{

@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { ScreenContainer } from "@/components/screen-container";
+import { BackButton } from "@/components/back-button";
 import { useThemeColors, spacing, borderRadius, fontSize, fontWeight } from "@/constants/styles";
 import { playSound } from "@/lib/sound-manager";
 
@@ -302,6 +303,7 @@ export default function PracticeScreen() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
+          <BackButton />
           <View>
             <Text style={styles.headerText}>Q{currentProblemIndex + 1}/{TOTAL_PROBLEMS}</Text>
           </View>

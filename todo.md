@@ -158,3 +158,9 @@
 - [x] Change home screen title from "Math Practice" to "YaYa Math"
 - [x] Verify title uses correct brand color #3dcfc2
 - [x] Add subtitle "Always Be Learning" under YaYa Math title on home screen
+- [x] Create reusable back button component with "<" symbol in brand color
+- [x] Add back button to practice screen (top left)
+- [x] Add back button to results screen (top left)
+- [x] Add back button to enter-initials screen (top left)
+- [x] Show "Congrats! 🎉" message after successful leaderboard submission
+- [x] Auto-navigate to leaderboard tab after submission with delay
