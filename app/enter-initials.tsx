@@ -6,6 +6,7 @@ import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { addSubmissionToHistory } from "@/lib/submission-history";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -80,6 +81,16 @@ export default function EnterInitialsScreen() {
 
       // Check if submission was successful
       if (result.success) {
+        // Save to local history
+        await addSubmissionToHistory({
+          initials: initials.join(""),
+          score: correct,
+          totalProblems: total,
+          operation: operation,
+          difficulty: difficulty,
+          mode: "practice",
+        });
+
         if (Platform.OS !== "web") {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }

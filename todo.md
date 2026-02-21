@@ -151,3 +151,7 @@
 - [x] Add confirmation message after successful leaderboard submission
 - [ ] Test leaderboard submission end-to-end for all modes and difficulties
 - [x] Enhance loading state on leaderboard submission button with text feedback
+- [x] Create submission history tracking utility with AsyncStorage
+- [x] Update enter-initials screen to save submissions locally after successful submission
+- [x] Add My Scores section to profile page displaying submission history
+- [x] Format My Scores list with date, operation, difficulty, and score
