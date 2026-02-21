@@ -50,7 +50,7 @@ export default function OperationSelectionScreen() {
     title: {
       fontSize: fontSize['3xl'],
       fontWeight: fontWeight.bold,
-      color: colors.foreground,
+      color: colors.primary,
     },
     subtitle: {
       fontSize: fontSize.sm,
@@ -191,7 +191,7 @@ export default function OperationSelectionScreen() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Math Practice</Text>
+          <Text style={styles.title}>YaYa Math</Text>
           <Text style={styles.subtitle}>Choose operations to practice</Text>
         </View>
 

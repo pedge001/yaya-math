@@ -155,3 +155,5 @@
 - [x] Update enter-initials screen to save submissions locally after successful submission
 - [x] Add My Scores section to profile page displaying submission history
 - [x] Format My Scores list with date, operation, difficulty, and score
+- [x] Change home screen title from "Math Practice" to "YaYa Math"
+- [x] Verify title uses correct brand color #3dcfc2
