@@ -164,3 +164,9 @@
 - [x] Add back button to enter-initials screen (top left)
 - [x] Show "Congrats! 🎉" message after successful leaderboard submission
 - [x] Auto-navigate to leaderboard tab after submission with delay
+- [ ] Check Railway server logs for leaderboard submission errors
+- [ ] Verify database connection is working on Railway
+- [ ] Test leaderboard API endpoint directly
+- [ ] Fix identified issue preventing submissions
+- [x] Update Drizzle schema to use text instead of ENUM for PostgreSQL compatibility
+- [x] Provide Railway table creation guide with correct column types

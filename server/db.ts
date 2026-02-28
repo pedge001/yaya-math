@@ -1,5 +1,5 @@
 import { desc, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { dailyChallengeLeaderboard, InsertDailyChallengeEntry, InsertLeaderboardEntry, InsertSpeedLeaderboardEntry, InsertUser, leaderboard, speedLeaderboard, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -68,7 +68,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    // PostgreSQL upsert using onConflictDoUpdate
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -248,7 +250,6 @@ export async function resetAllLeaderboards() {
   }
 
   try {
-    // Delete all entries from all three leaderboard tables
     await db.delete(leaderboard);
     await db.delete(speedLeaderboard);
     await db.delete(dailyChallengeLeaderboard);

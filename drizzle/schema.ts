@@ -1,24 +1,19 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { integer, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 /**
  * Core user table backing auth flow.
  * Extend this file with additional tables as your product grows.
  * Columns use camelCase to match both database fields and generated types.
  */
-export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
-  id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: text("role").default("user").notNull(), // 'user' | 'admin'
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
@@ -29,13 +24,13 @@ export type InsertUser = typeof users.$inferInsert;
  * Leaderboard table for tracking high scores.
  * No user authentication required - uses initials instead.
  */
-export const leaderboard = mysqlTable("leaderboard", {
-  id: int("id").autoincrement().primaryKey(),
+export const leaderboard = pgTable("leaderboard", {
+  id: serial("id").primaryKey(),
   initials: varchar("initials", { length: 3 }).notNull(),
-  score: int("score").notNull(),
-  totalProblems: int("totalProblems").notNull(),
-  operation: mysqlEnum("operation", ["addition", "subtraction", "multiplication", "division"]).notNull(),
-  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("easy").notNull(),
+  score: integer("score").notNull(),
+  totalProblems: integer("totalProblems").notNull(),
+  operation: text("operation").notNull(), // 'addition' | 'subtraction' | 'multiplication' | 'division'
+  difficulty: text("difficulty").default("easy").notNull(), // 'easy' | 'medium' | 'hard'
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -45,13 +40,13 @@ export type InsertLeaderboardEntry = typeof leaderboard.$inferInsert;
 /**
  * Speed mode leaderboard for tracking fastest completion times.
  */
-export const speedLeaderboard = mysqlTable("speed_leaderboard", {
-  id: int("id").autoincrement().primaryKey(),
+export const speedLeaderboard = pgTable("speed_leaderboard", {
+  id: serial("id").primaryKey(),
   initials: varchar("initials", { length: 3 }).notNull(),
-  completionTime: int("completionTime").notNull(), // Time in seconds
-  totalProblems: int("totalProblems").notNull(),
-  operation: mysqlEnum("operation", ["addition", "subtraction", "multiplication", "division"]).notNull(),
-  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("easy").notNull(),
+  completionTime: integer("completionTime").notNull(), // Time in seconds
+  totalProblems: integer("totalProblems").notNull(),
+  operation: text("operation").notNull(), // 'addition' | 'subtraction' | 'multiplication' | 'division'
+  difficulty: text("difficulty").default("easy").notNull(), // 'easy' | 'medium' | 'hard'
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -61,11 +56,11 @@ export type InsertSpeedLeaderboardEntry = typeof speedLeaderboard.$inferInsert;
 /**
  * Daily challenge leaderboard - resets every 24 hours.
  */
-export const dailyChallengeLeaderboard = mysqlTable("daily_challenge_leaderboard", {
-  id: int("id").autoincrement().primaryKey(),
+export const dailyChallengeLeaderboard = pgTable("daily_challenge_leaderboard", {
+  id: serial("id").primaryKey(),
   initials: varchar("initials", { length: 3 }).notNull(),
-  score: int("score").notNull(),
-  totalProblems: int("totalProblems").notNull(),
+  score: integer("score").notNull(),
+  totalProblems: integer("totalProblems").notNull(),
   challengeDate: varchar("challengeDate", { length: 10 }).notNull(), // YYYY-MM-DD format
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

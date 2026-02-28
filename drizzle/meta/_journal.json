@@ -43,6 +43,13 @@
       "when": 1771273273723,
       "tag": "0005_unique_juggernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1772238099815,
+      "tag": "0006_gigantic_felicia_hardy",
+      "breakpoints": true
     }
   ]
 }
