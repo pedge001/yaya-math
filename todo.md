@@ -174,3 +174,9 @@
 - [x] Add question count selector buttons (10, 20, 30) to home screen
 - [x] Update practice screen to use selected question count
 - [x] Test question count selection end-to-end
+- [x] Implement rate limiting on leaderboard submission endpoints
+- [x] Add express-rate-limit package
+- [x] Create rate limiting middleware configuration
+- [x] Apply strict rate limiting (3 per minute) to submission endpoints
+- [x] Apply general rate limiting (10 per 15 minutes) to submission endpoints
+- [x] Apply general API rate limiting (100 per 15 minutes) to all API routes

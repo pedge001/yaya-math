@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { submissionLimiter, strictSubmissionLimiter, generalLimiter } from "./rate-limit.js";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -53,6 +54,9 @@ async function startServer() {
 
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Apply general rate limiting to all API routes
+  app.use("/api/", generalLimiter);
 
   registerOAuthRoutes(app);
 
@@ -370,7 +374,7 @@ async function startServer() {
   });
 
   // API endpoint to reset leaderboards
-  app.post("/api/admin/reset-leaderboards", async (req, res) => {
+  app.post("/api/admin/reset-leaderboards", submissionLimiter, async (req, res) => {
     const password = req.headers['x-admin-password'];
     
     if (password !== ADMIN_PASSWORD) {
@@ -381,6 +385,16 @@ async function startServer() {
     const result = await resetAllLeaderboards();
     res.json(result);
   });
+
+  // Apply strict rate limiting to leaderboard submission endpoints
+  app.use("/api/trpc/leaderboard.submitScore", strictSubmissionLimiter);
+  app.use("/api/trpc/speedLeaderboard.submitTime", strictSubmissionLimiter);
+  app.use("/api/trpc/dailyChallenge.submitScore", strictSubmissionLimiter);
+
+  // Apply submission rate limiting to leaderboard submission endpoints
+  app.use("/api/trpc/leaderboard.submitScore", submissionLimiter);
+  app.use("/api/trpc/speedLeaderboard.submitTime", submissionLimiter);
+  app.use("/api/trpc/dailyChallenge.submitScore", submissionLimiter);
 
   app.use(
     "/api/trpc",
