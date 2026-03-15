@@ -185,3 +185,5 @@
 - [x] Integrate retry logic into leaderboard submission (enter-initials.tsx)
 - [x] Add user feedback for rate limit scenarios (retry message display)
 - [x] Handle 429 errors gracefully with automatic retries
+- [x] Apply retry logic to speed mode submission (enter-initials-speed.tsx)
+- [x] Apply retry logic to daily challenge submission (enter-initials-daily.tsx)

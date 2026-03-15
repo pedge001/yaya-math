@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Text, View, TouchableOpacity, Platform } from "react-native";
+import { Text, View, TouchableOpacity, Platform, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { retryWithBackoff } from "@/lib/retry-with-backoff";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -20,6 +21,7 @@ export default function EnterInitialsDailyScreen() {
 
   const [initials, setInitials] = useState(["A", "A", "A"]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
 
   const submitScoreMutation = trpc.dailyChallenge.submitScore.useMutation();
 
@@ -70,21 +72,65 @@ export default function EnterInitialsDailyScreen() {
   };
 
   const handleSubmit = async () => {
-    if (Platform.OS !== "web") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
+    setRetryMessage(null);
 
-    try {
-      await submitScoreMutation.mutateAsync({
-        initials: initials.join(""),
-        score: correct,
-        totalProblems: total,
-        challengeDate: challengeDate,
-      });
+    const result = await retryWithBackoff(
+      () =>
+        submitScoreMutation.mutateAsync({
+          initials: initials.join(""),
+          score: correct,
+          totalProblems: total,
+          challengeDate: challengeDate,
+        }),
+      {
+        maxAttempts: 3,
+        initialDelayMs: 1000,
+        maxDelayMs: 10000,
+        backoffMultiplier: 2,
+        jitterFactor: 0.1,
+        onRetry: (attempt, delay, error) => {
+          console.log(`Daily challenge retry attempt ${attempt} after ${delay}ms due to:`, error);
+          const seconds = Math.ceil(delay / 1000);
+          setRetryMessage(`Server busy. Retrying in ${seconds}s... (Attempt ${attempt}/3)`);
+        },
+      }
+    );
 
+    setRetryMessage(null);
+
+    if (result.success) {
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       router.push("/daily-challenge-leaderboard");
-    } catch (error) {
-      console.error("Failed to submit score:", error);
+    } else {
+      console.error("Failed to submit daily challenge score after retries:", result.error);
+
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+
+      let errorMessage = "Unable to submit your score. Please check your connection and try again.";
+      if (result.error instanceof Error) {
+        if (result.error.message.includes("429")) {
+          errorMessage = "Server is experiencing high traffic. Please wait a moment and try again.";
+        } else if (result.error.message.includes("Network")) {
+          errorMessage = "Network error. Please check your internet connection.";
+        }
+      }
+
+      if (Platform.OS === "web") {
+        alert(errorMessage);
+      } else {
+        Alert.alert(
+          "Submission Failed",
+          errorMessage,
+          [
+            { text: "Try Again", style: "default" },
+            { text: "Cancel", style: "cancel", onPress: () => router.push("/") }
+          ]
+        );
+      }
     }
   };
 
@@ -192,6 +238,28 @@ export default function EnterInitialsDailyScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Retry Message */}
+        {retryMessage && (
+          <View
+            className="mb-6 p-4 rounded-lg"
+            style={{
+              backgroundColor: "rgba(61, 207, 194, 0.2)",
+              borderWidth: 1,
+              borderColor: colors.primary,
+            }}
+          >
+            <Text
+              className="text-center text-sm"
+              style={{
+                color: colors.primary,
+                fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+              }}
+            >
+              {retryMessage}
+            </Text>
+          </View>
+        )}
+
         {/* Submit Button */}
         <TouchableOpacity
           onPress={handleSubmit}
@@ -199,18 +267,34 @@ export default function EnterInitialsDailyScreen() {
           style={{
             borderColor: colors.primary,
             backgroundColor: "rgba(182, 255, 251, 0.2)",
+            opacity: submitScoreMutation.isPending ? 0.5 : 1,
           }}
           disabled={submitScoreMutation.isPending}
         >
-          <Text
-            className="text-xl font-bold"
-            style={{
-              color: colors.primary,
-              fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
-            }}
-          >
-            {submitScoreMutation.isPending ? "SUBMITTING..." : "SUBMIT"}
-          </Text>
+          {submitScoreMutation.isPending ? (
+            <View className="flex-row items-center gap-3">
+              <ActivityIndicator color={colors.primary} size="small" />
+              <Text
+                className="text-xl font-bold"
+                style={{
+                  color: colors.primary,
+                  fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+                }}
+              >
+                SUBMITTING...
+              </Text>
+            </View>
+          ) : (
+            <Text
+              className="text-xl font-bold"
+              style={{
+                color: colors.primary,
+                fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+              }}
+            >
+              SUBMIT
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScreenContainer>
