@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Text, View, TouchableOpacity, Platform, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -6,6 +6,7 @@ import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useThemeColors, spacing, borderRadius, fontSize, fontWeight } from "@/constants/styles";
 import { playSound } from "@/lib/sound-manager";
+import { getQuestionCount, setQuestionCount, getValidCounts, type QuestionCount } from "@/lib/question-count";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 type Difficulty = "easy" | "medium" | "hard";
@@ -33,8 +34,18 @@ export default function OperationSelectionScreen() {
   const [selectedOperations, setSelectedOperations] = useState<Set<Operation>>(new Set());
   const [isSpeedMode, setIsSpeedMode] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
+  const [questionCount, setQuestionCountState] = useState<QuestionCount>(20);
   const colors = useThemeColors();
   const router = useRouter();
+
+  // Load saved question count on mount
+  useEffect(() => {
+    const loadQuestionCount = async () => {
+      const saved = await getQuestionCount();
+      setQuestionCountState(saved);
+    };
+    loadQuestionCount();
+  }, []);
 
   const styles = StyleSheet.create({
     container: {
@@ -134,6 +145,32 @@ export default function OperationSelectionScreen() {
       color: colors.muted,
       textAlign: 'center',
     },
+    questionCountContainer: {
+      marginBottom: spacing.md,
+    },
+    questionCountLabel: {
+      fontSize: fontSize.xs,
+      color: colors.muted,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    questionCountRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      justifyContent: 'center',
+    },
+    questionCountButton: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.lg,
+      borderWidth: 2,
+      minWidth: 60,
+      alignItems: 'center',
+    },
+    questionCountButtonText: {
+      fontSize: fontSize.xs,
+      fontWeight: fontWeight.semibold,
+    },
     startButton: {
       paddingVertical: spacing.md,
       borderRadius: borderRadius.full,
@@ -167,7 +204,7 @@ export default function OperationSelectionScreen() {
       playSound("buttonPress");
     }
     const operationsParam = Array.from(selectedOperations).join(",");
-    router.push(`/practice?operations=${operationsParam}&speedMode=${isSpeedMode}&difficulty=${difficulty}`);
+    router.push(`/practice?operations=${operationsParam}&speedMode=${isSpeedMode}&difficulty=${difficulty}&questionCount=${questionCount}`);
   };
 
   const toggleSpeedMode = () => {
@@ -184,6 +221,15 @@ export default function OperationSelectionScreen() {
       playSound("buttonPress");
     }
     setDifficulty(newDifficulty);
+  };
+
+  const selectQuestionCount = async (count: QuestionCount) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      playSound("buttonPress");
+    }
+    setQuestionCountState(count);
+    await setQuestionCount(count);
   };
 
   return (
@@ -296,6 +342,35 @@ export default function OperationSelectionScreen() {
                   {level.label}
                 </Text>
                 <Text style={styles.difficultyRange}>{level.range}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Question Count Selection */}
+        <View style={styles.questionCountContainer}>
+          <Text style={styles.questionCountLabel}>Questions</Text>
+          <View style={styles.questionCountRow}>
+            {getValidCounts().map((count) => (
+              <TouchableOpacity
+                key={count}
+                onPress={() => selectQuestionCount(count)}
+                style={[
+                  styles.questionCountButton,
+                  {
+                    borderColor: questionCount === count ? colors.primary : colors.border,
+                    backgroundColor: questionCount === count ? `${colors.primary}20` : colors.surface,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.questionCountButtonText,
+                    { color: questionCount === count ? colors.primary : colors.muted },
+                  ]}
+                >
+                  {count}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>

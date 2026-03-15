@@ -25,7 +25,8 @@ interface Problem {
   answer: number;
 }
 
-const TOTAL_PROBLEMS = 50;
+// Default to 50 if not provided (for backward compatibility)
+const DEFAULT_TOTAL_PROBLEMS = 50;
 
 function getDifficultyRange(difficulty: Difficulty): number {
   switch (difficulty) {
@@ -90,6 +91,7 @@ export default function PracticeScreen() {
   const operations = (params.operations as string)?.split(",") as Operation[];
   const isSpeedMode = params.speedMode === "true";
   const difficulty = (params.difficulty as Difficulty) || "easy";
+  const questionCount = parseInt(params.questionCount as string) || DEFAULT_TOTAL_PROBLEMS;
 
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -206,11 +208,11 @@ export default function PracticeScreen() {
 
   useEffect(() => {
     const generatedProblems: Problem[] = [];
-    for (let i = 0; i < TOTAL_PROBLEMS; i++) {
+    for (let i = 0; i < questionCount; i++) {
       generatedProblems.push(generateProblem(operations, difficulty));
     }
     setProblems(generatedProblems);
-  }, [difficulty]);
+  }, [difficulty, questionCount]);
 
   // Timer for speed mode
   useEffect(() => {
@@ -271,16 +273,16 @@ export default function PracticeScreen() {
         setCorrectCount(correctCount + 1);
       }
 
-      if (currentProblemIndex < TOTAL_PROBLEMS - 1) {
+      if (currentProblemIndex < questionCount - 1) {
         setCurrentProblemIndex(currentProblemIndex + 1);
         setUserAnswer("");
         backgroundColor.value = colors.surface;
       } else {
         // Session complete
         const time = Math.floor((Date.now() - startTime) / 1000);
-        const accuracy = Math.round((correctCount / TOTAL_PROBLEMS) * 100);
+        const accuracy = Math.round((correctCount / questionCount) * 100);
         router.push(
-          `/results?correct=${correctCount}&total=${TOTAL_PROBLEMS}&time=${time}&accuracy=${accuracy}&operations=${params.operations}&speedMode=${isSpeedMode}`
+          `/results?correct=${correctCount}&total=${questionCount}&time=${time}&accuracy=${accuracy}&operations=${params.operations}&speedMode=${isSpeedMode}`
         );
       }
     }, 600);
@@ -305,7 +307,7 @@ export default function PracticeScreen() {
         <View style={styles.header}>
           <BackButton />
           <View>
-            <Text style={styles.headerText}>Q{currentProblemIndex + 1}/{TOTAL_PROBLEMS}</Text>
+            <Text style={styles.headerText}>Q{currentProblemIndex + 1}/{questionCount}</Text>
           </View>
           {isSpeedMode && (
             <View style={styles.timerContainer}>

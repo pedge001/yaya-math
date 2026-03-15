@@ -170,3 +170,7 @@
 - [ ] Fix identified issue preventing submissions
 - [x] Update Drizzle schema to use text instead of ENUM for PostgreSQL compatibility
 - [x] Provide Railway table creation guide with correct column types
+- [x] Create question count utility with AsyncStorage persistence (default 20)
+- [x] Add question count selector buttons (10, 20, 30) to home screen
+- [x] Update practice screen to use selected question count
+- [x] Test question count selection end-to-end
