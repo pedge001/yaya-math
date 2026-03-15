@@ -180,3 +180,8 @@
 - [x] Apply strict rate limiting (3 per minute) to submission endpoints
 - [x] Apply general rate limiting (10 per 15 minutes) to submission endpoints
 - [x] Apply general API rate limiting (100 per 15 minutes) to all API routes
+- [x] Create retry utility with exponential backoff (lib/retry-with-backoff.ts)
+- [x] Implement retry logic tests (16 tests passing)
+- [x] Integrate retry logic into leaderboard submission (enter-initials.tsx)
+- [x] Add user feedback for rate limit scenarios (retry message display)
+- [x] Handle 429 errors gracefully with automatic retries

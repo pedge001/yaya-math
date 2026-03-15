@@ -8,6 +8,7 @@ import { BackButton } from "@/components/back-button";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { addSubmissionToHistory } from "@/lib/submission-history";
+import { retryWithBackoff } from "@/lib/retry-with-backoff";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -23,6 +24,7 @@ export default function EnterInitialsScreen() {
 
   const [initials, setInitials] = useState(["A", "A", "A"]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
 
   const submitScoreMutation = trpc.leaderboard.submitScore.useMutation();
 
@@ -71,17 +73,38 @@ export default function EnterInitialsScreen() {
   };
 
   const handleSubmit = async () => {
-    try {
-      const result = await submitScoreMutation.mutateAsync({
-        initials: initials.join(""),
-        score: correct,
-        totalProblems: total,
-        operation: operation,
-        difficulty: difficulty,
-      });
+    setRetryMessage(null);
+
+    // Use retry logic with exponential backoff for submission
+    const result = await retryWithBackoff(
+      () =>
+        submitScoreMutation.mutateAsync({
+          initials: initials.join(""),
+          score: correct,
+          totalProblems: total,
+          operation: operation,
+          difficulty: difficulty,
+        }),
+      {
+        maxAttempts: 3,
+        initialDelayMs: 1000,
+        maxDelayMs: 10000,
+        backoffMultiplier: 2,
+        jitterFactor: 0.1,
+        onRetry: (attempt, delay, error) => {
+          console.log(`Retry attempt ${attempt} after ${delay}ms due to:`, error);
+          // Show retry message to user
+          const seconds = Math.ceil(delay / 1000);
+          setRetryMessage(`Server busy. Retrying in ${seconds}s... (Attempt ${attempt}/3)`);
+        },
+      }
+    );
+
+    if (result.success && result.data) {
+      const submissionResult = result.data;
 
       // Check if submission was successful
-      if (result.success) {
+      if (submissionResult.success) {
         // Save to local history
         await addSubmissionToHistory({
           initials: initials.join(""),
@@ -95,7 +118,9 @@ export default function EnterInitialsScreen() {
         if (Platform.OS !== "web") {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        
+
+        setRetryMessage(null);
+
         // Show success message
         if (Platform.OS === "web") {
           alert("Congrats! 🎉\nYour score has been submitted!");
@@ -106,7 +131,7 @@ export default function EnterInitialsScreen() {
             [{ text: "OK" }]
           );
         }
-        
+
         // Auto-navigate to leaderboard after delay
         setTimeout(() => {
           router.push("/(tabs)/leaderboard");
@@ -116,13 +141,15 @@ export default function EnterInitialsScreen() {
         if (Platform.OS !== "web") {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
-        
+
+        setRetryMessage(null);
+
         if (Platform.OS === "web") {
           alert("Failed to submit score. Please try again.");
         } else {
           Alert.alert(
             "Submission Failed",
-            result.error || "Unable to submit score. Please check your connection and try again.",
+            submissionResult.error || "Unable to submit score. Please check your connection and try again.",
             [
               { text: "Try Again", style: "default" },
               { text: "Cancel", style: "cancel", onPress: () => router.push("/") }
@@ -130,19 +157,32 @@ export default function EnterInitialsScreen() {
           );
         }
       }
-    } catch (error) {
-      console.error("Failed to submit score:", error);
-      
+    } else {
+      // All retries failed
+      console.error("Failed to submit score after retries:", result.error);
+
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
-      
+
+      setRetryMessage(null);
+
+      // Determine error message based on error type
+      let errorMessage = "Unable to submit score. Please check your connection and try again.";
+      if (result.error instanceof Error) {
+        if (result.error.message.includes("429")) {
+          errorMessage = "Server is experiencing high traffic. Please wait a moment and try again.";
+        } else if (result.error.message.includes("Network")) {
+          errorMessage = "Network error. Please check your internet connection.";
+        }
+      }
+
       if (Platform.OS === "web") {
-        alert("Network error. Please check your connection and try again.");
+        alert(errorMessage);
       } else {
         Alert.alert(
-          "Network Error",
-          "Unable to connect to the server. Please check your internet connection.",
+          "Submission Failed",
+          errorMessage,
           [
             { text: "Try Again", style: "default" },
             { text: "Cancel", style: "cancel", onPress: () => router.push("/") }
@@ -305,6 +345,28 @@ export default function EnterInitialsScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Retry Message */}
+          {retryMessage && (
+            <View
+              className="mb-6 p-4 rounded-lg"
+              style={{
+                backgroundColor: "rgba(61, 207, 194, 0.2)",
+                borderWidth: 1,
+                borderColor: colors.primary,
+              }}
+            >
+              <Text
+                className="text-center text-sm"
+                style={{
+                  color: colors.primary,
+                  fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+                }}
+              >
+                {retryMessage}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Submit Button */}
