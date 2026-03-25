@@ -97,12 +97,12 @@ export default function ResultsScreen() {
     if (isSpeedMode) {
       router.push({
         pathname: "/enter-initials-speed",
-        params: { completionTime, total, operation: firstOperation },
+        params: { completionTime, total, operation: firstOperation, difficulty },
       });
     } else {
       router.push({
         pathname: "/enter-initials",
-        params: { correct, total, operation: firstOperation },
+        params: { correct, total, operation: firstOperation, difficulty },
       });
     }
   };

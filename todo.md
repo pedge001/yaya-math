@@ -187,3 +187,4 @@
 - [x] Handle 429 errors gracefully with automatic retries
 - [x] Apply retry logic to speed mode submission (enter-initials-speed.tsx)
 - [x] Apply retry logic to daily challenge submission (enter-initials-daily.tsx)
+- [x] Fix leaderboard submission failure for 10-question addition test (Submission Failed error) - missing difficulty param in results.tsx navigation
