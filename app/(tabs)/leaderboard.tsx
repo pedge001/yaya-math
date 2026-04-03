@@ -65,6 +65,8 @@ export default function LeaderboardScreen() {
       flex: 1,
       paddingVertical: spacing.sm,
       borderRadius: borderRadius.lg,
+      borderWidth: 2,
+      alignItems: 'center',
     },
     difficultyText: {
       textAlign: 'center',
@@ -238,7 +240,8 @@ export default function LeaderboardScreen() {
               style={[
                 styles.difficultyButton,
                 {
-                  backgroundColor: selectedDifficulty === diff ? colors.primary : colors.surface,
+                  backgroundColor: selectedDifficulty === diff ? `${colors.primary}20` : colors.surface,
+                  borderColor: selectedDifficulty === diff ? colors.primary : colors.border,
                 },
               ]}
             >
@@ -246,7 +249,7 @@ export default function LeaderboardScreen() {
                 style={[
                   styles.difficultyText,
                   {
-                    color: selectedDifficulty === diff ? "#000000" : colors.foreground,
+                    color: selectedDifficulty === diff ? colors.primary : colors.muted,
                   },
                 ]}
               >
@@ -308,7 +311,9 @@ export default function LeaderboardScreen() {
                     </View>
                   </View>
                   <Text style={styles.scoreText}>
-                    {isSpeedMode ? `${Math.floor(entry.time / 60)}:${(entry.time % 60).toString().padStart(2, "0")}` : entry.score}
+                    {isSpeedMode
+                      ? `${Math.floor(entry.completionTime / 60)}:${(entry.completionTime % 60).toString().padStart(2, "0")}`
+                      : `${entry.score}/${entry.totalProblems}`}
                   </Text>
                 </View>
               ))}
