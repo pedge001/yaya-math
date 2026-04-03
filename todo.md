@@ -188,3 +188,4 @@
 - [x] Apply retry logic to speed mode submission (enter-initials-speed.tsx)
 - [x] Apply retry logic to daily challenge submission (enter-initials-daily.tsx)
 - [x] Fix leaderboard submission failure for 10-question addition test (Submission Failed error) - missing difficulty param in results.tsx navigation
+- [x] Reduce operation square sizes on home screen to prevent overlap with buttons below

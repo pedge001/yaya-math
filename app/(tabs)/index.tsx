@@ -52,11 +52,12 @@ export default function OperationSelectionScreen() {
       flex: 1,
       justifyContent: 'space-between',
       padding: spacing.md,
+      paddingBottom: spacing.sm,
     },
     header: {
       alignItems: 'center',
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
     },
     title: {
       fontSize: fontSize['3xl'],
@@ -69,27 +70,28 @@ export default function OperationSelectionScreen() {
       marginTop: spacing.xs,
     },
     operationsContainer: {
-      flex: 1,
-      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.sm,
     },
     operationsGrid: {
-      gap: spacing.md,
+      gap: spacing.sm,
+      width: '100%',
     },
     operationRow: {
       flexDirection: 'row',
-      gap: spacing.md,
+      gap: spacing.sm,
     },
     operationCard: {
       flex: 1,
-      aspectRatio: 1,
+      height: 90,
       borderRadius: borderRadius.xl,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
     },
     operationSymbol: {
-      fontSize: 48,
-      marginBottom: spacing.xs,
+      fontSize: 32,
+      marginBottom: 2,
     },
     operationLabel: {
       fontSize: fontSize.xs,
