@@ -99,7 +99,7 @@ export async function getUserByOpenId(openId: string) {
  * @param operation - Optional filter by operation type
  * @param difficulty - Optional filter by difficulty level
  */
-export async function getTop10Leaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division", difficulty?: "easy" | "medium" | "hard") {
+export async function getTop10Leaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division", difficulty?: "easy" | "medium" | "hard", totalProblems?: number) {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot get leaderboard: database not available");
@@ -110,6 +110,7 @@ export async function getTop10Leaderboard(operation?: "addition" | "subtraction"
     const conditions = [];
     if (operation) conditions.push(eq(leaderboard.operation, operation));
     if (difficulty) conditions.push(eq(leaderboard.difficulty, difficulty));
+    if (totalProblems) conditions.push(eq(leaderboard.totalProblems, totalProblems));
     
     let query = db.select().from(leaderboard);
     if (conditions.length > 0) {
@@ -150,7 +151,7 @@ export async function addLeaderboardEntry(entry: InsertLeaderboardEntry) {
  * @param operation - Optional filter by operation type
  * @param difficulty - Optional filter by difficulty level
  */
-export async function getTop10SpeedLeaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division", difficulty?: "easy" | "medium" | "hard") {
+export async function getTop10SpeedLeaderboard(operation?: "addition" | "subtraction" | "multiplication" | "division", difficulty?: "easy" | "medium" | "hard", totalProblems?: number) {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot get speed leaderboard: database not available");
@@ -161,6 +162,7 @@ export async function getTop10SpeedLeaderboard(operation?: "addition" | "subtrac
     const conditions = [];
     if (operation) conditions.push(eq(speedLeaderboard.operation, operation));
     if (difficulty) conditions.push(eq(speedLeaderboard.difficulty, difficulty));
+    if (totalProblems) conditions.push(eq(speedLeaderboard.totalProblems, totalProblems));
     
     let query = db.select().from(speedLeaderboard);
     if (conditions.length > 0) {

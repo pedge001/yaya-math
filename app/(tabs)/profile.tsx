@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ScrollView, Text, View, TouchableOpacity, Platform, StyleSheet, FlatList } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, Platform, StyleSheet, FlatList, Alert, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useFocusEffect } from "@react-navigation/native";
@@ -10,13 +10,17 @@ import { useThemeColors, spacing, fontSize, fontWeight } from "@/constants/style
 import { playSound } from "@/lib/sound-manager";
 import { getSubmissionHistory, SubmissionEntry } from "@/lib/submission-history";
 import { getStreakData, getStreakBadge, type StreakData } from "@/lib/streak-tracker";
+import { useAuth } from "@/hooks/use-auth";
+import { startGoogleLogin } from "@/lib/google-auth";
 
 export default function ProfileScreen() {
   const colors = useThemeColors();
   const router = useRouter();
+  const { user, isAuthenticated, loading: authLoading, logout, refresh } = useAuth();
   const [submissions, setSubmissions] = useState<SubmissionEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastPracticeDate: "", longestStreak: 0 });
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // Load submission history when screen is focused
   useFocusEffect(
@@ -128,6 +132,54 @@ export default function ProfileScreen() {
       color: '#9CA3AF',
       textAlign: 'center',
       marginTop: spacing.lg,
+    },
+    accountCard: {
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: spacing.md,
+    },
+    accountInfo: {
+      gap: 4,
+    },
+    accountName: {
+      fontSize: fontSize.lg,
+      fontWeight: fontWeight.bold,
+    },
+    accountEmail: {
+      fontSize: fontSize.base,
+    },
+    accountMethod: {
+      fontSize: fontSize.sm,
+      marginTop: 4,
+    },
+    logoutButton: {
+      borderWidth: 1.5,
+      borderRadius: 12,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+    },
+    logoutText: {
+      fontSize: fontSize.base,
+      fontWeight: fontWeight.semibold,
+    },
+    googleButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      gap: spacing.sm,
+    },
+    googleIcon: {
+      fontSize: 20,
+      fontWeight: fontWeight.bold,
+      color: '#4285F4',
+    },
+    googleButtonText: {
+      fontSize: fontSize.base,
+      fontWeight: fontWeight.semibold,
     },
   });
 
@@ -292,12 +344,86 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* Account Section (placeholder for future) */}
+        {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
-          <Text style={styles.placeholderText}>
-            Name and email settings coming soon
-          </Text>
+          {authLoading ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : isAuthenticated && user ? (
+            <View style={{ gap: spacing.sm }}>
+              <View style={[styles.accountCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={styles.accountInfo}>
+                  <Text style={[styles.accountName, { color: colors.foreground }]}>
+                    {user.name || "User"}
+                  </Text>
+                  <Text style={[styles.accountEmail, { color: colors.muted }]}>
+                    {user.email || "No email"}
+                  </Text>
+                  <Text style={[styles.accountMethod, { color: colors.primary }]}>
+                    Signed in with Google
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={[styles.logoutButton, { borderColor: colors.error }]}
+                onPress={() => {
+                  Alert.alert(
+                    "Sign Out",
+                    "Are you sure you want to sign out?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Sign Out",
+                        style: "destructive",
+                        onPress: async () => {
+                          if (Platform.OS !== "web") {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                          }
+                          await logout();
+                        },
+                      },
+                    ]
+                  );
+                }}
+              >
+                <Text style={[styles.logoutText, { color: colors.error }]}>Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={{ gap: spacing.sm }}>
+              <Text style={[styles.placeholderText, { color: colors.muted }]}>
+                Sign in to sync your progress across devices
+              </Text>
+              <TouchableOpacity
+                style={[styles.googleButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={async () => {
+                  try {
+                    setGoogleLoading(true);
+                    if (Platform.OS !== "web") {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }
+                    await startGoogleLogin();
+                  } catch (error: any) {
+                    Alert.alert("Login Failed", error.message || "Unable to start Google login");
+                  } finally {
+                    setGoogleLoading(false);
+                  }
+                }}
+                disabled={googleLoading}
+              >
+                {googleLoading ? (
+                  <ActivityIndicator size="small" color={colors.foreground} />
+                ) : (
+                  <>
+                    <Text style={[styles.googleIcon]}>G</Text>
+                    <Text style={[styles.googleButtonText, { color: colors.foreground }]}>
+                      Sign in with Google
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
     </ScreenContainer>

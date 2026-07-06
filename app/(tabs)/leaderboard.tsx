@@ -21,6 +21,7 @@ const operations: { id: Operation; label: string; symbol: string }[] = [
 export default function LeaderboardScreen() {
   const [selectedOperation, setSelectedOperation] = useState<Operation>("addition");
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("easy");
+  const [selectedQuestionCount, setSelectedQuestionCount] = useState<number>(20);
   const [isSpeedMode, setIsSpeedMode] = useState(false);
   const colors = useThemeColors();
   const userInitials = useUserInitials();
@@ -146,11 +147,11 @@ export default function LeaderboardScreen() {
   });
 
   const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery(
-    { operation: selectedOperation, difficulty: selectedDifficulty },
+    { operation: selectedOperation, difficulty: selectedDifficulty, totalProblems: selectedQuestionCount },
     { enabled: !isSpeedMode }
   );
   const { data: speedLeaderboardData } = trpc.speedLeaderboard.getTop10.useQuery(
-    { operation: selectedOperation, difficulty: selectedDifficulty },
+    { operation: selectedOperation, difficulty: selectedDifficulty, totalProblems: selectedQuestionCount },
     { enabled: isSpeedMode }
   );
 
@@ -256,6 +257,40 @@ export default function LeaderboardScreen() {
                 ]}
               >
                 {diff.charAt(0).toUpperCase() + diff.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Question Count Tabs */}
+        <View style={styles.difficultyRow}>
+          {[10, 20, 30].map((count) => (
+            <TouchableOpacity
+              key={count}
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  playSound("buttonPress");
+                }
+                setSelectedQuestionCount(count);
+              }}
+              style={[
+                styles.difficultyButton,
+                {
+                  backgroundColor: selectedQuestionCount === count ? `${colors.primary}20` : colors.surface,
+                  borderColor: selectedQuestionCount === count ? colors.primary : colors.border,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.difficultyText,
+                  {
+                    color: selectedQuestionCount === count ? colors.primary : colors.muted,
+                  },
+                ]}
+              >
+                {count} Qs
               </Text>
             </TouchableOpacity>
           ))}

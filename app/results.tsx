@@ -31,8 +31,8 @@ export default function ResultsScreen() {
 
   const percentage = Math.round((correct / total) * 100);
 
-  const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery({ operation: firstOperation }, { enabled: !isSpeedMode });
-  const { data: speedLeaderboardData } = trpc.speedLeaderboard.getTop10.useQuery({ operation: firstOperation }, { enabled: isSpeedMode });
+  const { data: leaderboardData } = trpc.leaderboard.getTop10.useQuery({ operation: firstOperation, difficulty: difficulty as "easy" | "medium" | "hard", totalProblems: total }, { enabled: !isSpeedMode });
+  const { data: speedLeaderboardData } = trpc.speedLeaderboard.getTop10.useQuery({ operation: firstOperation, difficulty: difficulty as "easy" | "medium" | "hard", totalProblems: total }, { enabled: isSpeedMode });
   const [isHighScore, setIsHighScore] = useState(false);
   const [isPersonalBest, setIsPersonalBest] = useState(false);
 

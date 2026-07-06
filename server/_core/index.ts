@@ -4,6 +4,7 @@ import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
+import { registerGoogleAuthRoutes } from "../google-auth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { submissionLimiter, strictSubmissionLimiter, generalLimiter } from "./rate-limit.js";
@@ -63,6 +64,7 @@ async function startServer() {
   app.use("/api/", generalLimiter);
 
   registerOAuthRoutes(app);
+  registerGoogleAuthRoutes(app);
 
   // Root endpoint for Railway healthcheck
   app.get("/", (_req, res) => {

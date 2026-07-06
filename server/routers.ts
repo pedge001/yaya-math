@@ -25,10 +25,11 @@ export const appRouter = router({
         z.object({
           operation: z.enum(["addition", "subtraction", "multiplication", "division"]).optional(),
           difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+          totalProblems: z.number().int().optional(),
         })
       )
       .query(async ({ input }) => {
-        return await db.getTop10Leaderboard(input.operation, input.difficulty);
+        return await db.getTop10Leaderboard(input.operation, input.difficulty, input.totalProblems);
       }),
     submitScore: publicProcedure
       .input(
@@ -51,10 +52,11 @@ export const appRouter = router({
         z.object({
           operation: z.enum(["addition", "subtraction", "multiplication", "division"]).optional(),
           difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+          totalProblems: z.number().int().optional(),
         })
       )
       .query(async ({ input }) => {
-        return await db.getTop10SpeedLeaderboard(input.operation, input.difficulty);
+        return await db.getTop10SpeedLeaderboard(input.operation, input.difficulty, input.totalProblems);
       }),
     submitTime: publicProcedure
       .input(

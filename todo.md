@@ -203,3 +203,7 @@
 - [x] Add daily streak counter on home screen (consecutive days practiced)
 - [x] Display current and longest all-time streak on Profile screen
 - [x] Add total problems solved counter on Profile screen
+- [ ] Implement Google OAuth login (server-side flow, user table, session management)
+- [ ] Build client-side login UI and auth state management
+- [ ] Connect user accounts to leaderboard and progress data sync
+- [x] Add question count filter (10, 20, 30) to leaderboard screen
