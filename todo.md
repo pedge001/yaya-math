@@ -208,3 +208,6 @@
 - [x] Connect user accounts to leaderboard and progress data sync (userId column added to all leaderboard tables)
 - [x] Add question count filter (10, 20, 30) to leaderboard screen
 - [x] Reduce operation card button sizes by 25% to prevent overlap with Speed Mode button
+- [x] Add "Show Results" checkbox next to Speed Mode on home screen
+- [x] Show correct answer after wrong response during practice when "Show Results" is enabled
+- [x] Display all incorrect questions with correct answers at end of round

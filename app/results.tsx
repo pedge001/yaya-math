@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Text, View, TouchableOpacity, Platform } from "react-native";
+import { Text, View, TouchableOpacity, Platform, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
@@ -14,6 +14,29 @@ import { updateAchievementProgress } from "@/lib/achievements";
 import { getStreakData } from "@/lib/streak-tracker";
 import { saveSession } from "@/lib/statistics-tracker";
 
+interface IncorrectQuestion {
+  num1: number;
+  num2: number;
+  operation: string;
+  correctAnswer: number;
+  userAnswer: number;
+}
+
+function getOperationSymbol(operation: string): string {
+  switch (operation) {
+    case "addition":
+      return "+";
+    case "subtraction":
+      return "−";
+    case "multiplication":
+      return "×";
+    case "division":
+      return "÷";
+    default:
+      return "+";
+  }
+}
+
 export default function ResultsScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -23,9 +46,25 @@ export default function ResultsScreen() {
   const total = parseInt(params.total as string);
   const operations = params.operations as string;
   const isSpeedMode = params.speedMode === "true";
-  const completionTime = params.completionTime ? parseInt(params.completionTime as string) : 0;
+  const showResults = params.showResults === "true";
+  const completionTime = params.completionTime
+    ? parseInt(params.completionTime as string)
+    : params.time
+    ? parseInt(params.time as string)
+    : 0;
   const difficulty = (params.difficulty as string) || "easy";
-  
+
+  // Parse incorrect questions from URL params
+  const incorrectQuestions: IncorrectQuestion[] = (() => {
+    try {
+      const raw = params.incorrectQuestions as string;
+      if (!raw) return [];
+      return JSON.parse(decodeURIComponent(raw));
+    } catch {
+      return [];
+    }
+  })();
+
   // Parse first operation for leaderboard checking
   const firstOperation = operations.split(",")[0] as "addition" | "subtraction" | "multiplication" | "division";
 
@@ -111,7 +150,7 @@ export default function ResultsScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    router.push(`/practice?operations=${operations}&speedMode=${isSpeedMode}&difficulty=${difficulty}&questionCount=${total}`);
+    router.push(`/practice?operations=${operations}&speedMode=${isSpeedMode}&difficulty=${difficulty}&questionCount=${total}&showResults=${showResults}`);
   };
 
   const handleChangeOperations = () => {
@@ -123,83 +162,115 @@ export default function ResultsScreen() {
 
   return (
     <ScreenContainer className="p-6">
-      <View className="flex-1 justify-between">
-        {/* Header */}
-        <View className="items-center pt-8">
-          <View className="absolute left-0 top-0">
-            <BackButton />
-          </View>
-          <Text className="text-3xl font-bold text-foreground mb-2">Practice Complete!</Text>
-        </View>
-
-        {/* Results Display */}
-        <View className="flex-1 justify-center items-center gap-8">
-          <View className="items-center">
-            <Text className="text-7xl font-bold mb-4" style={{ color: colors.primary }}>
-              {percentage}%
-            </Text>
-            <Text className="text-2xl font-semibold text-foreground">
-              {correct} / {total} Correct
-            </Text>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="flex-1 justify-between">
+          {/* Header */}
+          <View className="items-center pt-8">
+            <View className="absolute left-0 top-0">
+              <BackButton />
+            </View>
+            <Text className="text-3xl font-bold text-foreground mb-2">Practice Complete!</Text>
           </View>
 
-          {isPersonalBest && (
-            <View className="w-full max-w-sm rounded-2xl p-4 mb-4" style={{ backgroundColor: "#FFD700" }}>
-              <Text className="text-xl font-bold text-center" style={{ color: "#000000" }}>
-                🎉 NEW PERSONAL BEST! 🎉
+          {/* Results Display */}
+          <View className="flex-1 justify-center items-center gap-8 py-6">
+            <View className="items-center">
+              <Text className="text-7xl font-bold mb-4" style={{ color: colors.primary }}>
+                {percentage}%
+              </Text>
+              <Text className="text-2xl font-semibold text-foreground">
+                {correct} / {total} Correct
               </Text>
             </View>
-          )}
 
-          <View className="w-full max-w-sm bg-surface rounded-2xl p-6" style={{ backgroundColor: colors.surface }}>
-            <View className="flex-row justify-between mb-3">
-              <Text className="text-base text-muted">Correct Answers:</Text>
-              <Text className="text-base font-semibold" style={{ color: colors.success }}>
-                {correct}
-              </Text>
+            {isPersonalBest && (
+              <View className="w-full max-w-sm rounded-2xl p-4 mb-4" style={{ backgroundColor: "#FFD700" }}>
+                <Text className="text-xl font-bold text-center" style={{ color: "#000000" }}>
+                  🎉 NEW PERSONAL BEST! 🎉
+                </Text>
+              </View>
+            )}
+
+            <View className="w-full max-w-sm bg-surface rounded-2xl p-6" style={{ backgroundColor: colors.surface }}>
+              <View className="flex-row justify-between mb-3">
+                <Text className="text-base text-muted">Correct Answers:</Text>
+                <Text className="text-base font-semibold" style={{ color: colors.success }}>
+                  {correct}
+                </Text>
+              </View>
+              <View className="flex-row justify-between">
+                <Text className="text-base text-muted">Incorrect Answers:</Text>
+                <Text className="text-base font-semibold" style={{ color: colors.error }}>
+                  {total - correct}
+                </Text>
+              </View>
             </View>
-            <View className="flex-row justify-between">
-              <Text className="text-base text-muted">Incorrect Answers:</Text>
-              <Text className="text-base font-semibold" style={{ color: colors.error }}>
-                {total - correct}
-              </Text>
-            </View>
+
+            {/* Incorrect Questions Review */}
+            {incorrectQuestions.length > 0 && (
+              <View className="w-full max-w-sm rounded-2xl p-4" style={{ backgroundColor: colors.surface }}>
+                <Text className="text-lg font-bold text-foreground mb-3">
+                  Questions to Review ({incorrectQuestions.length})
+                </Text>
+                {incorrectQuestions.map((q, index) => (
+                  <View
+                    key={index}
+                    className="flex-row items-center justify-between py-2"
+                    style={index < incorrectQuestions.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+                  >
+                    <View className="flex-1">
+                      <Text className="text-base text-foreground">
+                        {q.num1} {getOperationSymbol(q.operation)} {q.num2} = ?
+                      </Text>
+                    </View>
+                    <View className="items-end">
+                      <Text className="text-sm" style={{ color: colors.error, textDecorationLine: 'line-through' }}>
+                        {q.userAnswer}
+                      </Text>
+                      <Text className="text-sm font-bold" style={{ color: colors.success }}>
+                        {q.correctAnswer}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
-        </View>
 
-        {/* Action Buttons */}
-        <View className="gap-3 pb-4">
-          {isHighScore && (
+          {/* Action Buttons */}
+          <View className="gap-3 pb-4">
+            {isHighScore && (
+              <TouchableOpacity
+                onPress={handleEnterInitials}
+                className="py-4 rounded-full"
+                style={{ backgroundColor: "#FFD700" }}
+              >
+                <Text className="text-center text-base font-bold" style={{ color: "#000000" }}>
+                  🏆 Submit to Leaderboard
+                </Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
-              onPress={handleEnterInitials}
+              onPress={handlePracticeAgain}
               className="py-4 rounded-full"
-              style={{ backgroundColor: "#FFD700" }}
+              style={{ backgroundColor: colors.primary }}
             >
               <Text className="text-center text-base font-bold" style={{ color: "#000000" }}>
-                🏆 Submit to Leaderboard
+                Practice Again
               </Text>
             </TouchableOpacity>
-          )}
 
-          <TouchableOpacity
-            onPress={handlePracticeAgain}
-            className="py-4 rounded-full"
-            style={{ backgroundColor: colors.primary }}
-          >
-            <Text className="text-center text-base font-bold" style={{ color: "#000000" }}>
-              Practice Again
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleChangeOperations}
-            className="py-4 rounded-full border-2"
-            style={{ borderColor: colors.primary }}
-          >
-            <Text className="text-center text-base font-semibold text-foreground">Change Operations</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleChangeOperations}
+              className="py-4 rounded-full border-2"
+              style={{ borderColor: colors.primary }}
+            >
+              <Text className="text-center text-base font-semibold text-foreground">Change Operations</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </ScreenContainer>
   );
 }

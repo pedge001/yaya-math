@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Text, View, TouchableOpacity, Platform, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -23,6 +23,14 @@ interface Problem {
   num2: number;
   operation: Operation;
   answer: number;
+}
+
+interface IncorrectQuestion {
+  num1: number;
+  num2: number;
+  operation: Operation;
+  correctAnswer: number;
+  userAnswer: number;
 }
 
 // Default to 50 if not provided (for backward compatibility)
@@ -90,6 +98,7 @@ export default function PracticeScreen() {
 
   const operations = (params.operations as string)?.split(",") as Operation[];
   const isSpeedMode = params.speedMode === "true";
+  const showResults = params.showResults === "true";
   const difficulty = (params.difficulty as Difficulty) || "easy";
   const questionCount = parseInt(params.questionCount as string) || DEFAULT_TOTAL_PROBLEMS;
 
@@ -99,6 +108,9 @@ export default function PracticeScreen() {
   const [correctCount, setCorrectCount] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime] = useState(Date.now());
+  const [showingCorrectAnswer, setShowingCorrectAnswer] = useState(false);
+  const [currentCorrectAnswer, setCurrentCorrectAnswer] = useState<number | null>(null);
+  const incorrectQuestionsRef = useRef<IncorrectQuestion[]>([]);
 
   const backgroundColor = useSharedValue(colors.surface);
   const scale = useSharedValue(1);
@@ -159,6 +171,19 @@ export default function PracticeScreen() {
       fontSize: fontSize['2xl'],
       fontWeight: fontWeight.bold,
       color: colors.foreground,
+    },
+    correctAnswerContainer: {
+      marginTop: spacing.sm,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.lg,
+      backgroundColor: `${colors.error}20`,
+    },
+    correctAnswerText: {
+      fontSize: fontSize.base,
+      fontWeight: fontWeight.bold,
+      color: colors.error,
+      textAlign: 'center',
     },
     keypadContainer: {
       gap: spacing.sm,
@@ -231,6 +256,7 @@ export default function PracticeScreen() {
   }));
 
   const handleNumberPress = (num: string) => {
+    if (showingCorrectAnswer) return; // Block input while showing correct answer
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       playSound("buttonPress");
@@ -241,6 +267,7 @@ export default function PracticeScreen() {
   };
 
   const handleBackspace = () => {
+    if (showingCorrectAnswer) return; // Block input while showing correct answer
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       playSound("buttonPress");
@@ -249,7 +276,7 @@ export default function PracticeScreen() {
   };
 
   const handleSubmit = async () => {
-    if (userAnswer === "") return;
+    if (userAnswer === "" || showingCorrectAnswer) return;
 
     const answer = parseInt(userAnswer);
     const isCorrect = answer === problems[currentProblemIndex].answer;
@@ -268,25 +295,61 @@ export default function PracticeScreen() {
     backgroundColor.value = withTiming(isCorrect ? "#22C55E" : "#EF4444", { duration: 300 });
     scale.value = withSequence(withTiming(1.1, { duration: 200 }), withTiming(1, { duration: 200 }));
 
-    setTimeout(() => {
-      if (isCorrect) {
-        setCorrectCount(correctCount + 1);
-      }
+    // Track incorrect answers
+    if (!isCorrect) {
+      const problem = problems[currentProblemIndex];
+      incorrectQuestionsRef.current.push({
+        num1: problem.num1,
+        num2: problem.num2,
+        operation: problem.operation,
+        correctAnswer: problem.answer,
+        userAnswer: answer,
+      });
+    }
 
-      if (currentProblemIndex < questionCount - 1) {
-        setCurrentProblemIndex(currentProblemIndex + 1);
-        setUserAnswer("");
-        backgroundColor.value = colors.surface;
-      } else {
-        // Session complete - calculate final correct count inline (setState is async)
-        const finalCorrect = isCorrect ? correctCount + 1 : correctCount;
-        const time = Math.floor((Date.now() - startTime) / 1000);
-        const accuracy = Math.round((finalCorrect / questionCount) * 100);
-        router.push(
-          `/results?correct=${finalCorrect}&total=${questionCount}&time=${time}&accuracy=${accuracy}&operations=${params.operations}&speedMode=${isSpeedMode}`
-        );
-      }
-    }, 600);
+    // If showResults is enabled and answer is wrong, show the correct answer
+    if (showResults && !isCorrect) {
+      setCurrentCorrectAnswer(problems[currentProblemIndex].answer);
+      setShowingCorrectAnswer(true);
+      
+      // Show correct answer for 1.5 seconds, then advance
+      setTimeout(() => {
+        setShowingCorrectAnswer(false);
+        setCurrentCorrectAnswer(null);
+        advanceToNext(isCorrect);
+      }, 1500);
+    } else {
+      // Normal flow: advance after 600ms
+      setTimeout(() => {
+        advanceToNext(isCorrect);
+      }, 600);
+    }
+  };
+
+  const advanceToNext = (isCorrect: boolean) => {
+    if (isCorrect) {
+      setCorrectCount((prev) => prev + 1);
+    }
+
+    if (currentProblemIndex < questionCount - 1) {
+      setCurrentProblemIndex(currentProblemIndex + 1);
+      setUserAnswer("");
+      backgroundColor.value = colors.surface;
+    } else {
+      // Session complete - calculate final correct count inline (setState is async)
+      const finalCorrect = isCorrect ? correctCount + 1 : correctCount;
+      const time = Math.floor((Date.now() - startTime) / 1000);
+      const accuracy = Math.round((finalCorrect / questionCount) * 100);
+      
+      // Encode incorrect questions as base64 JSON for URL safety
+      const incorrectData = incorrectQuestionsRef.current.length > 0
+        ? encodeURIComponent(JSON.stringify(incorrectQuestionsRef.current))
+        : "";
+      
+      router.push(
+        `/results?correct=${finalCorrect}&total=${questionCount}&time=${time}&accuracy=${accuracy}&operations=${params.operations}&speedMode=${isSpeedMode}&difficulty=${difficulty}&showResults=${showResults}&incorrectQuestions=${incorrectData}`
+      );
+    }
   };
 
   if (problems.length === 0) {
@@ -332,6 +395,14 @@ export default function PracticeScreen() {
             <View style={styles.answerInputContainer}>
               <Text style={styles.answerText}>{userAnswer || " "}</Text>
             </View>
+            {/* Show correct answer when wrong and showResults is enabled */}
+            {showingCorrectAnswer && currentCorrectAnswer !== null && (
+              <View style={styles.correctAnswerContainer}>
+                <Text style={styles.correctAnswerText}>
+                  Correct answer: {currentCorrectAnswer}
+                </Text>
+              </View>
+            )}
           </Animated.View>
         </View>
 
@@ -385,16 +456,16 @@ export default function PracticeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSubmit}
-              disabled={userAnswer === ""}
+              disabled={userAnswer === "" || showingCorrectAnswer}
               style={[
                 styles.submitButton,
                 {
-                  backgroundColor: userAnswer !== "" ? colors.primary : colors.border,
-                  opacity: userAnswer !== "" ? 1 : 0.5,
+                  backgroundColor: (userAnswer !== "" && !showingCorrectAnswer) ? colors.primary : colors.border,
+                  opacity: (userAnswer !== "" && !showingCorrectAnswer) ? 1 : 0.5,
                 },
               ]}
             >
-              <Text style={[styles.submitButtonText, { color: userAnswer !== "" ? "#000000" : colors.muted }]}>
+              <Text style={[styles.submitButtonText, { color: (userAnswer !== "" && !showingCorrectAnswer) ? "#000000" : colors.muted }]}>
                 ✓
               </Text>
             </TouchableOpacity>

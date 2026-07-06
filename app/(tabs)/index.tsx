@@ -34,6 +34,7 @@ const difficultyLevels = [
 export default function OperationSelectionScreen() {
   const [selectedOperations, setSelectedOperations] = useState<Set<Operation>>(new Set());
   const [isSpeedMode, setIsSpeedMode] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [questionCount, setQuestionCountState] = useState<QuestionCount>(20);
   const [streak, setStreak] = useState(0);
@@ -126,6 +127,24 @@ export default function OperationSelectionScreen() {
     speedModeContainer: {
       alignItems: 'center',
       marginBottom: spacing.md,
+    },
+    showResultsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    showResultsCheckbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 4,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    showResultsLabel: {
+      fontSize: fontSize.sm,
+      fontWeight: fontWeight.medium,
     },
     speedModeButton: {
       flexDirection: 'row',
@@ -231,7 +250,7 @@ export default function OperationSelectionScreen() {
       playSound("buttonPress");
     }
     const operationsParam = Array.from(selectedOperations).join(",");
-    router.push(`/practice?operations=${operationsParam}&speedMode=${isSpeedMode}&difficulty=${difficulty}&questionCount=${questionCount}`);
+    router.push(`/practice?operations=${operationsParam}&speedMode=${isSpeedMode}&showResults=${showResults}&difficulty=${difficulty}&questionCount=${questionCount}`);
   };
 
   const toggleSpeedMode = () => {
@@ -346,6 +365,33 @@ export default function OperationSelectionScreen() {
               ]}
             >
               Speed Mode {isSpeedMode ? "ON" : "OFF"}
+            </Text>
+          </TouchableOpacity>
+          {/* Show Results Checkbox */}
+          <TouchableOpacity
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              setShowResults(!showResults);
+            }}
+            style={styles.showResultsRow}
+          >
+            <View
+              style={[
+                styles.showResultsCheckbox,
+                {
+                  borderColor: showResults ? colors.primary : colors.muted,
+                  backgroundColor: showResults ? colors.primary : "transparent",
+                },
+              ]}
+            >
+              {showResults && (
+                <Text style={{ color: "#000000", fontSize: 14, fontWeight: "700" }}>✓</Text>
+              )}
+            </View>
+            <Text style={[styles.showResultsLabel, { color: showResults ? colors.primary : colors.muted }]}>
+              Show Results
             </Text>
           </TouchableOpacity>
         </View>
