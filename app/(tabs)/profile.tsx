@@ -9,12 +9,14 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useThemeColors, spacing, fontSize, fontWeight } from "@/constants/styles";
 import { playSound } from "@/lib/sound-manager";
 import { getSubmissionHistory, SubmissionEntry } from "@/lib/submission-history";
+import { getStreakData, getStreakBadge, type StreakData } from "@/lib/streak-tracker";
 
 export default function ProfileScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const [submissions, setSubmissions] = useState<SubmissionEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastPracticeDate: "", longestStreak: 0 });
 
   // Load submission history when screen is focused
   useFocusEffect(
@@ -27,6 +29,8 @@ export default function ProfileScreen() {
     setLoading(true);
     const history = await getSubmissionHistory();
     setSubmissions(history);
+    const streak = await getStreakData();
+    setStreakData(streak);
     setLoading(false);
   };
 
@@ -131,6 +135,56 @@ export default function ProfileScreen() {
     <ScreenContainer>
       <ScrollView style={styles.scrollView}>
         <Text style={styles.title}>Profile</Text>
+
+        {/* Streak Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Practice Streak</Text>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+            backgroundColor: 'rgba(182, 255, 251, 0.05)',
+            borderWidth: 1,
+            borderColor: 'rgba(182, 255, 251, 0.2)',
+            borderRadius: 12,
+            padding: spacing.lg,
+          }}>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 32 }}>
+                {(() => {
+                  const today = new Date().toISOString().split("T")[0];
+                  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+                  const isActive = streakData.lastPracticeDate === today || streakData.lastPracticeDate === yesterday;
+                  const current = isActive ? streakData.currentStreak : 0;
+                  return getStreakBadge(current) || "\uD83C\uDF31";
+                })()}
+              </Text>
+              <Text style={{ fontSize: 28, fontWeight: '700', color: colors.warning, marginTop: 4 }}>
+                {(() => {
+                  const today = new Date().toISOString().split("T")[0];
+                  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+                  const isActive = streakData.lastPracticeDate === today || streakData.lastPracticeDate === yesterday;
+                  return isActive ? streakData.currentStreak : 0;
+                })()}
+              </Text>
+              <Text style={{ fontSize: fontSize.sm, color: '#9CA3AF', marginTop: 2 }}>Current</Text>
+            </View>
+            <View style={{ width: 1, backgroundColor: 'rgba(182, 255, 251, 0.2)' }} />
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 32 }}>
+                {getStreakBadge(streakData.longestStreak) || "\uD83C\uDF31"}
+              </Text>
+              <Text style={{ fontSize: 28, fontWeight: '700', color: colors.primary, marginTop: 4 }}>
+                {streakData.longestStreak}
+              </Text>
+              <Text style={{ fontSize: fontSize.sm, color: '#9CA3AF', marginTop: 2 }}>Best</Text>
+            </View>
+          </View>
+          {streakData.longestStreak > 0 && (
+            <Text style={{ fontSize: fontSize.xs, color: '#9CA3AF', textAlign: 'center', marginTop: spacing.sm }}>
+              Practice daily to beat your record!
+            </Text>
+          )}
+        </View>
 
         {/* Privacy Policy Section */}
         <View style={styles.section}>
