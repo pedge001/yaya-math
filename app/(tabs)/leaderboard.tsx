@@ -6,6 +6,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useThemeColors, spacing, borderRadius, fontSize, fontWeight } from "@/constants/styles";
 import { trpc } from "@/lib/trpc";
 import { playSound } from "@/lib/sound-manager";
+import { useUserInitials } from "@/hooks/use-user-initials";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 type Difficulty = "easy" | "medium" | "hard";
@@ -22,6 +23,7 @@ export default function LeaderboardScreen() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("easy");
   const [isSpeedMode, setIsSpeedMode] = useState(false);
   const colors = useThemeColors();
+  const userInitials = useUserInitials();
 
   const styles = StyleSheet.create({
     container: {
@@ -296,27 +298,61 @@ export default function LeaderboardScreen() {
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {currentData && currentData.length > 0 ? (
             <View style={styles.leaderboardList}>
-              {currentData.map((entry: any, index: number) => (
-                <View
-                  key={index}
-                  style={[styles.leaderboardEntry, { backgroundColor: colors.surface }]}
-                >
-                  <View style={styles.entryLeft}>
-                    <Text style={styles.medalText}>{getMedalEmoji(index + 1)}</Text>
-                    <View>
-                      <Text style={styles.initialsText}>{entry.initials}</Text>
-                      <Text style={styles.dateText}>
-                        {new Date(entry.createdAt).toLocaleDateString()}
-                      </Text>
+              {currentData.map((entry: any, index: number) => {
+                const isUser = userInitials !== null && entry.initials === userInitials;
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.leaderboardEntry,
+                      {
+                        backgroundColor: isUser
+                          ? `${colors.primary}20`
+                          : colors.surface,
+                        borderWidth: isUser ? 1.5 : 0,
+                        borderColor: isUser ? colors.primary : "transparent",
+                      },
+                    ]}
+                  >
+                    <View style={styles.entryLeft}>
+                      <Text style={styles.medalText}>{getMedalEmoji(index + 1)}</Text>
+                      <View>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                          <Text style={styles.initialsText}>{entry.initials}</Text>
+                          {isUser && (
+                            <View
+                              style={{
+                                backgroundColor: colors.primary,
+                                paddingHorizontal: 6,
+                                paddingVertical: 2,
+                                borderRadius: 4,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color: "#000000",
+                                  fontSize: 10,
+                                  fontWeight: "700",
+                                }}
+                              >
+                                YOU
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={styles.dateText}>
+                          {new Date(entry.createdAt).toLocaleDateString()}
+                        </Text>
+                      </View>
                     </View>
+                    <Text style={styles.scoreText}>
+                      {isSpeedMode
+                        ? `${Math.floor(entry.completionTime / 60)}:${(entry.completionTime % 60).toString().padStart(2, "0")}`
+                        : `${entry.score}/${entry.totalProblems}`}
+                    </Text>
                   </View>
-                  <Text style={styles.scoreText}>
-                    {isSpeedMode
-                      ? `${Math.floor(entry.completionTime / 60)}:${(entry.completionTime % 60).toString().padStart(2, "0")}`
-                      : `${entry.score}/${entry.totalProblems}`}
-                  </Text>
-                </View>
-              ))}
+                );
+              })}
             </View>
           ) : (
             <View style={styles.emptyState}>

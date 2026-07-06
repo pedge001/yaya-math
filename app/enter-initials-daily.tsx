@@ -7,6 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { retryWithBackoff } from "@/lib/retry-with-backoff";
+import { addSubmissionToHistory } from "@/lib/submission-history";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -103,6 +104,16 @@ export default function EnterInitialsDailyScreen() {
 
       // Check if the server actually saved the entry
       if (submissionResult.success) {
+        // Save to local history for Personal Best badge
+        await addSubmissionToHistory({
+          initials: initials.join(""),
+          score: correct,
+          totalProblems: total,
+          operation: "addition", // daily challenge defaults
+          difficulty: "medium",
+          mode: "practice",
+        });
+
         if (Platform.OS !== "web") {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }

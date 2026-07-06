@@ -199,3 +199,4 @@
 - [x] Add difficulty filter to speed leaderboard screen (already existed, server-side and() fix resolves it)
 - [x] Fix rate limiter IPv6 validation warning (validate: false)
 - [x] Enhance leaderboard submission UI with loading spinner and success confirmation (all 3 screens)
+- [x] Add "Personal Best" badge on leaderboard to highlight user's current rank
