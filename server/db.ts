@@ -9,7 +9,10 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const dbUrl = process.env.DATABASE_URL;
+      // Append sslmode=require for Railway if not already present
+      const connectionString = dbUrl.includes("sslmode") ? dbUrl : `${dbUrl}${dbUrl.includes("?") ? "&" : "?"}sslmode=require`;
+      _db = drizzle(connectionString);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -137,9 +140,9 @@ export async function addLeaderboardEntry(entry: InsertLeaderboardEntry) {
   try {
     await db.insert(leaderboard).values(entry);
     return { success: true };
-  } catch (error) {
-    console.error("[Database] Failed to add leaderboard entry:", error);
-    return { success: false, error: "Failed to add entry" };
+  } catch (error: any) {
+    console.error("[Database] Failed to add leaderboard entry:", error?.message || error);
+    return { success: false, error: `Failed to add entry: ${error?.message || 'Unknown error'}` };
   }
 }
 
@@ -189,9 +192,9 @@ export async function addSpeedLeaderboardEntry(entry: InsertSpeedLeaderboardEntr
   try {
     await db.insert(speedLeaderboard).values(entry);
     return { success: true };
-  } catch (error) {
-    console.error("[Database] Failed to add speed leaderboard entry:", error);
-    return { success: false, error: "Failed to add entry" };
+  } catch (error: any) {
+    console.error("[Database] Failed to add speed leaderboard entry:", error?.message || error);
+    return { success: false, error: `Failed to add entry: ${error?.message || 'Unknown error'}` };
   }
 }
 
@@ -233,9 +236,9 @@ export async function addDailyChallengeEntry(entry: InsertDailyChallengeEntry) {
   try {
     await db.insert(dailyChallengeLeaderboard).values(entry);
     return { success: true };
-  } catch (error) {
-    console.error("[Database] Failed to add daily challenge entry:", error);
-    return { success: false, error: "Failed to add entry" };
+  } catch (error: any) {
+    console.error("[Database] Failed to add daily challenge entry:", error?.message || error);
+    return { success: false, error: `Failed to add entry: ${error?.message || 'Unknown error'}` };
   }
 }
 

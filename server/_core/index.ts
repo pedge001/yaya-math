@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { submissionLimiter, strictSubmissionLimiter, generalLimiter } from "./rate-limit.js";
+import { runAutoMigration } from "./auto-migrate.js";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -28,6 +29,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Run auto-migration to ensure tables exist
+  await runAutoMigration();
+
   const app = express();
   const server = createServer(app);
 
@@ -67,6 +71,23 @@ async function startServer() {
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
+  });
+
+  // Database diagnostic endpoint
+  app.get("/api/db-status", async (_req, res) => {
+    try {
+      const { getDb } = await import("../db.js");
+      const db = await getDb();
+      if (!db) {
+        return res.json({ connected: false, error: "No database connection", hasDbUrl: !!process.env.DATABASE_URL });
+      }
+      // Try a simple query to verify tables exist
+      const { leaderboard } = await import("../../drizzle/schema.js");
+      const count = await db.select().from(leaderboard).limit(1);
+      return res.json({ connected: true, leaderboardTableExists: true, sampleCount: count.length });
+    } catch (error: any) {
+      return res.json({ connected: false, error: error?.message || "Unknown error" });
+    }
   });
 
   // Admin password (set via environment variable or use default)

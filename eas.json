@@ -17,7 +17,8 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://ravishing-smile-production.up.railway.app"
       }
     }
   },
