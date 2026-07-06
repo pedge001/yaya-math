@@ -108,7 +108,20 @@ export default function EnterInitialsSpeedScreen() {
         if (Platform.OS !== "web") {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        router.push("/speed-leaderboard");
+
+        setRetryMessage(null);
+
+        // Show success confirmation before navigating
+        if (Platform.OS === "web") {
+          alert("Congrats! 🎉\nYour time has been submitted!");
+          router.push("/speed-leaderboard");
+        } else {
+          Alert.alert(
+            "Congrats! 🎉",
+            "Your time has been submitted to the leaderboard!",
+            [{ text: "OK", onPress: () => router.push("/speed-leaderboard") }]
+          );
+        }
       } else {
         // Server responded but DB write failed
         console.error("Speed submission DB write failed:", submissionResult.error);

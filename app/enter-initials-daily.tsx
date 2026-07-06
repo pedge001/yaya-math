@@ -106,7 +106,20 @@ export default function EnterInitialsDailyScreen() {
         if (Platform.OS !== "web") {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        router.push("/daily-challenge-leaderboard");
+
+        setRetryMessage(null);
+
+        // Show success confirmation before navigating
+        if (Platform.OS === "web") {
+          alert("Congrats! 🎉\nYour score has been submitted!");
+          router.push("/daily-challenge-leaderboard");
+        } else {
+          Alert.alert(
+            "Congrats! 🎉",
+            "Your score has been submitted to the leaderboard!",
+            [{ text: "OK", onPress: () => router.push("/daily-challenge-leaderboard") }]
+          );
+        }
       } else {
         // Server responded but DB write failed
         console.error("Daily challenge DB write failed:", submissionResult.error);
