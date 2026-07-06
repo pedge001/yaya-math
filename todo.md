@@ -200,3 +200,4 @@
 - [x] Fix rate limiter IPv6 validation warning (validate: false)
 - [x] Enhance leaderboard submission UI with loading spinner and success confirmation (all 3 screens)
 - [x] Add "Personal Best" badge on leaderboard to highlight user's current rank
+- [x] Add daily streak counter on home screen (consecutive days practiced)

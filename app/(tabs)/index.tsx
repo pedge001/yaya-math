@@ -7,6 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useThemeColors, spacing, borderRadius, fontSize, fontWeight } from "@/constants/styles";
 import { playSound } from "@/lib/sound-manager";
 import { getQuestionCount, setQuestionCount, getValidCounts, type QuestionCount } from "@/lib/question-count";
+import { getStreakData, getStreakBadge } from "@/lib/streak-tracker";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 type Difficulty = "easy" | "medium" | "hard";
@@ -35,16 +36,23 @@ export default function OperationSelectionScreen() {
   const [isSpeedMode, setIsSpeedMode] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [questionCount, setQuestionCountState] = useState<QuestionCount>(20);
+  const [streak, setStreak] = useState(0);
   const colors = useThemeColors();
   const router = useRouter();
 
-  // Load saved question count on mount
+  // Load saved question count and streak on mount
   useEffect(() => {
-    const loadQuestionCount = async () => {
+    const loadSettings = async () => {
       const saved = await getQuestionCount();
       setQuestionCountState(saved);
+      const streakData = await getStreakData();
+      // Check if streak is still active (practiced today or yesterday)
+      const today = new Date().toISOString().split("T")[0];
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+      const isActive = streakData.lastPracticeDate === today || streakData.lastPracticeDate === yesterday;
+      setStreak(isActive ? streakData.currentStreak : 0);
     };
-    loadQuestionCount();
+    loadSettings();
   }, []);
 
   const styles = StyleSheet.create({
@@ -68,6 +76,23 @@ export default function OperationSelectionScreen() {
       fontSize: fontSize.sm,
       color: colors.muted,
       marginTop: spacing.xs,
+    },
+    streakContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+      backgroundColor: streak > 0 ? `${colors.warning}20` : colors.surface,
+      borderWidth: 1,
+      borderColor: streak > 0 ? colors.warning : colors.border,
+    },
+    streakText: {
+      fontSize: fontSize.sm,
+      fontWeight: fontWeight.semibold,
+      color: streak > 0 ? colors.warning : colors.muted,
+      marginLeft: 4,
     },
     operationsContainer: {
       alignItems: 'center',
@@ -241,6 +266,12 @@ export default function OperationSelectionScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>YaYa Math</Text>
           <Text style={styles.subtitle}>Always Be Learning</Text>
+          <View style={styles.streakContainer}>
+            <Text style={{ fontSize: 16 }}>{streak > 0 ? getStreakBadge(streak) : "🌱"}</Text>
+            <Text style={styles.streakText}>
+              {streak > 0 ? `${streak} day streak!` : "Start your streak!"}
+            </Text>
+          </View>
         </View>
 
         {/* Operation Cards Grid */}
