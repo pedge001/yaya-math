@@ -7,16 +7,21 @@ import { getUserByOpenId, upsertUser } from "./db";
 /**
  * Google OAuth2 configuration.
  * Requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET env vars.
+ * GOOGLE_REDIRECT_URI defaults to the Railway production callback URL.
  */
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 
 function getGoogleConfig() {
+  const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || "";
   return {
     clientId: process.env.GOOGLE_CLIENT_ID || "",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    redirectUri: process.env.GOOGLE_REDIRECT_URI || "",
+    // Default redirect URI: production Railway URL + /api/auth/google/callback
+    redirectUri:
+      process.env.GOOGLE_REDIRECT_URI ||
+      (apiBaseUrl ? `${apiBaseUrl}/api/auth/google/callback` : ""),
   };
 }
 
@@ -76,7 +81,7 @@ async function getGoogleUserInfo(accessToken: string) {
 }
 
 /**
- * Build a user response object for the client
+ * Build a user response object for the client (matches Manus OAuth format)
  */
 function buildUserResponse(user: any) {
   return {
@@ -101,7 +106,14 @@ export function registerGoogleAuthRoutes(app: Express) {
     const config = getGoogleConfig();
 
     if (!config.clientId) {
-      res.status(500).json({ error: "Google OAuth not configured" });
+      console.error("[Google Auth] GOOGLE_CLIENT_ID not configured");
+      res.status(500).json({ error: "Google OAuth not configured. Set GOOGLE_CLIENT_ID env var." });
+      return;
+    }
+
+    if (!config.redirectUri) {
+      console.error("[Google Auth] GOOGLE_REDIRECT_URI not configured");
+      res.status(500).json({ error: "Google OAuth redirect URI not configured." });
       return;
     }
 
@@ -185,6 +197,9 @@ export function registerGoogleAuthRoutes(app: Express) {
         lastSignedIn: new Date(),
       });
 
+      // Get the full user record from DB (includes id)
+      const dbUser = await getUserByOpenId(openId);
+
       // Create our app's session token (same JWT as Manus OAuth)
       const sessionToken = await sdk.createSessionToken(openId, {
         name: googleUser.name || "",
@@ -192,9 +207,20 @@ export function registerGoogleAuthRoutes(app: Express) {
       });
 
       if (platform === "mobile" && mobileRedirect) {
-        // For mobile: redirect to the app's deep link with the session token
+        // For mobile: redirect to the app's deep link with the session token + user info
+        const userPayload = Buffer.from(
+          JSON.stringify(buildUserResponse(dbUser || {
+            openId,
+            name: googleUser.name,
+            email: googleUser.email,
+            loginMethod: "google",
+            lastSignedIn: new Date(),
+          }))
+        ).toString("base64url");
+
         const separator = mobileRedirect.includes("?") ? "&" : "?";
-        const redirectUrl = `${mobileRedirect}${separator}sessionToken=${encodeURIComponent(sessionToken)}&name=${encodeURIComponent(googleUser.name || "")}&email=${encodeURIComponent(googleUser.email || "")}`;
+        const redirectUrl = `${mobileRedirect}${separator}sessionToken=${encodeURIComponent(sessionToken)}&user=${encodeURIComponent(userPayload)}`;
+        console.log("[Google Auth] Mobile redirect to:", redirectUrl.substring(0, 100) + "...");
         res.redirect(302, redirectUrl);
       } else {
         // For web: set cookie and redirect to frontend

@@ -99,23 +99,23 @@ export default function OperationSelectionScreen() {
       marginBottom: spacing.sm,
     },
     operationsGrid: {
-      gap: spacing.sm,
+      gap: spacing.xs,
       width: '100%',
     },
     operationRow: {
       flexDirection: 'row',
-      gap: spacing.sm,
+      gap: spacing.xs,
     },
     operationCard: {
       flex: 1,
-      height: 90,
+      height: 68,
       borderRadius: borderRadius.xl,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
     },
     operationSymbol: {
-      fontSize: 32,
+      fontSize: 24,
       marginBottom: 2,
     },
     operationLabel: {

@@ -22,10 +22,12 @@ export default function ProfileScreen() {
   const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastPracticeDate: "", longestStreak: 0 });
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Load submission history when screen is focused
+  // Load submission history and refresh auth state when screen is focused
   useFocusEffect(
     useCallback(() => {
       loadSubmissions();
+      // Refresh auth state in case user just completed Google OAuth
+      refresh();
     }, [])
   );
 

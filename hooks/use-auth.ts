@@ -66,8 +66,36 @@ export function useAuth(options?: UseAuthOptions) {
         console.log("[useAuth] Using cached user info");
         setUser(cachedUser);
       } else {
-        console.log("[useAuth] No cached user, setting user to null");
-        setUser(null);
+        // No cached user but we have a token — fetch from server
+        console.log("[useAuth] No cached user, fetching from /api/auth/me...");
+        try {
+          const apiUser = await Api.getMe();
+          if (apiUser) {
+            const userInfo: Auth.User = {
+              id: apiUser.id,
+              openId: apiUser.openId,
+              name: apiUser.name,
+              email: apiUser.email,
+              loginMethod: apiUser.loginMethod,
+              lastSignedIn: new Date(apiUser.lastSignedIn),
+            };
+            setUser(userInfo);
+            await Auth.setUserInfo(userInfo);
+            console.log("[useAuth] Native user fetched from API:", userInfo.name);
+          } else {
+            // Token is invalid or expired
+            console.log("[useAuth] Token invalid, clearing session");
+            await Auth.removeSessionToken();
+            await Auth.clearUserInfo();
+            setUser(null);
+          }
+        } catch (fetchErr) {
+          console.warn("[useAuth] Failed to fetch user from API:", fetchErr);
+          // Token might be invalid — clear it
+          await Auth.removeSessionToken();
+          await Auth.clearUserInfo();
+          setUser(null);
+        }
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to fetch user");
@@ -112,7 +140,7 @@ export function useAuth(options?: UseAuthOptions) {
             setUser(cachedUser);
             setLoading(false);
           } else {
-            // No cached user, check session token
+            // No cached user, check session token and potentially fetch from server
             fetchUser();
           }
         });
@@ -122,15 +150,6 @@ export function useAuth(options?: UseAuthOptions) {
       setLoading(false);
     }
   }, [autoFetch, fetchUser]);
-
-  useEffect(() => {
-    console.log("[useAuth] State updated:", {
-      hasUser: !!user,
-      loading,
-      isAuthenticated,
-      error: error?.message,
-    });
-  }, [user, loading, isAuthenticated, error]);
 
   return {
     user,

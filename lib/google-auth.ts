@@ -1,4 +1,5 @@
 import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 import { getApiBaseUrl } from "@/constants/oauth";
 
@@ -14,7 +15,7 @@ function getGoogleCallbackDeepLink(): string {
  * Initiate Google OAuth login flow.
  * 
  * 1. Calls the server to get the Google consent URL
- * 2. Opens the URL in the system browser
+ * 2. Opens the URL in the system browser (native) or redirects (web)
  * 3. After consent, Google redirects to our server callback
  * 4. Server exchanges code, creates session, and redirects back to the app
  *    with a sessionToken param (handled by app/oauth/callback.tsx)
@@ -49,7 +50,9 @@ export async function startGoogleLogin(): Promise<void> {
     // On web, redirect the browser
     window.location.href = url;
   } else {
-    // On native, open in system browser
+    // On native, open in system browser so the deep link callback works
+    // Using openBrowserAsync provides a better UX than Linking.openURL
+    // but we need to use openURL for the deep link redirect to work
     await Linking.openURL(url);
   }
 }
