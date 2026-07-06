@@ -213,3 +213,8 @@
 - [x] Display all incorrect questions with correct answers at end of round
 - [x] Persist Show Results preference with AsyncStorage across sessions
 - [x] Add "Retry Missed" button on results screen to practice only incorrect questions
+- [x] Build local stats tracking system to analyze user performance by operation and number ranges
+- [x] Create Stats screen with sortable views by math operation (Addition, Subtraction, Multiplication, Division)
+- [x] Display most frequently missed problem types and number ranges in stats
+- [x] Record stats after each practice session completes
+- [x] Add Stats tab to navigation

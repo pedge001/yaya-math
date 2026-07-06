@@ -14,6 +14,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { BackButton } from "@/components/back-button";
 import { useThemeColors, spacing, borderRadius, fontSize, fontWeight } from "@/constants/styles";
 import { playSound } from "@/lib/sound-manager";
+import { recordSession, type ProblemStat } from "@/lib/stats-tracker";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 type Difficulty = "easy" | "medium" | "hard";
@@ -326,7 +327,7 @@ export default function PracticeScreen() {
     }
   };
 
-  const advanceToNext = (isCorrect: boolean) => {
+  const advanceToNext = async (isCorrect: boolean) => {
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);
     }
@@ -336,22 +337,41 @@ export default function PracticeScreen() {
       setUserAnswer("");
       backgroundColor.value = colors.surface;
     } else {
-      // Session complete - calculate final correct count inline (setState is async)
       const finalCorrect = isCorrect ? correctCount + 1 : correctCount;
       const time = Math.floor((Date.now() - startTime) / 1000);
       const accuracy = Math.round((finalCorrect / questionCount) * 100);
-      
-      // Encode incorrect questions as base64 JSON for URL safety
+
+      const sessionProblems: ProblemStat[] = problems.map((problem) => ({
+        operation: problem.operation,
+        num1: problem.num1,
+        num2: problem.num2,
+        correctAnswer: problem.answer,
+        userAnswer: problem.answer,
+        isCorrect: true,
+        timestamp: Date.now(),
+      }));
+
+      incorrectQuestionsRef.current.forEach((incorrect) => {
+        const problemIdx = problems.findIndex(
+          (p) => p.num1 === incorrect.num1 && p.num2 === incorrect.num2 && p.operation === incorrect.operation
+        );
+        if (problemIdx >= 0) {
+          sessionProblems[problemIdx].userAnswer = incorrect.userAnswer;
+          sessionProblems[problemIdx].isCorrect = false;
+        }
+      });
+
+      await recordSession(sessionProblems);
+
       const incorrectData = incorrectQuestionsRef.current.length > 0
         ? encodeURIComponent(JSON.stringify(incorrectQuestionsRef.current))
         : "";
-      
+
       router.push(
         `/results?correct=${finalCorrect}&total=${questionCount}&time=${time}&accuracy=${accuracy}&operations=${params.operations}&speedMode=${isSpeedMode}&difficulty=${difficulty}&showResults=${showResults}&incorrectQuestions=${incorrectData}`
       );
     }
   };
-
   if (problems.length === 0) {
     return (
       <ScreenContainer>
