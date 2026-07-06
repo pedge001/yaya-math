@@ -111,7 +111,7 @@ export default function ResultsScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    router.push(`/practice?operations=${operations}`);
+    router.push(`/practice?operations=${operations}&speedMode=${isSpeedMode}&difficulty=${difficulty}&questionCount=${total}`);
   };
 
   const handleChangeOperations = () => {

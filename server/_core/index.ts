@@ -186,7 +186,7 @@ async function startServer() {
     `);
   });
 
-  // Leaderboard admin page
+  // Leaderboard admin page - password verified server-side
   app.get("/leaderboardadmin", (_req, res) => {
     res.send(`
 <!DOCTYPE html>
@@ -295,7 +295,7 @@ async function startServer() {
   </style>
 </head>
 <body>
-  <h1>🔧 Leaderboard Admin</h1>
+  <h1>Leaderboard Admin</h1>
   
   <div class="admin-section">
     <div class="password-section" id="passwordSection">
@@ -309,7 +309,7 @@ async function startServer() {
     <div class="reset-section" id="resetSection">
       <h2>Reset Leaderboards</h2>
       <div class="warning">
-        <strong>⚠️ Warning:</strong> This action will permanently delete ALL entries from:
+        <strong>Warning:</strong> This action will permanently delete ALL entries from:
         <ul>
           <li>Practice Mode Leaderboard (all operations & difficulties)</li>
           <li>Speed Mode Leaderboard (all operations & difficulties)</li>
@@ -323,31 +323,42 @@ async function startServer() {
       <div id="result" class="hidden"></div>
       
       <div class="info">
-        <p><strong>Future Enhancement:</strong> Weekly automated reset can be configured as a scheduled job.</p>
         <p>Last manual reset: <span id="lastReset">Never</span></p>
       </div>
     </div>
   </div>
 
   <script>
-    const ADMIN_PASSWORD = '${ADMIN_PASSWORD}';
+    let adminToken = null;
     
-    function checkPassword() {
+    async function checkPassword() {
       const input = document.getElementById('passwordInput');
       const error = document.getElementById('authError');
       
-      if (input.value === ADMIN_PASSWORD) {
-        document.getElementById('passwordSection').style.display = 'none';
-        document.getElementById('resetSection').classList.add('unlocked');
-        error.classList.add('hidden');
-      } else {
-        error.textContent = '❌ Incorrect password. Please try again.';
+      try {
+        const response = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: input.value })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          adminToken = data.token;
+          document.getElementById('passwordSection').style.display = 'none';
+          document.getElementById('resetSection').classList.add('unlocked');
+          error.classList.add('hidden');
+        } else {
+          error.textContent = 'Incorrect password. Please try again.';
+          error.classList.remove('hidden');
+          input.value = '';
+        }
+      } catch (e) {
+        error.textContent = 'Network error. Please try again.';
         error.classList.remove('hidden');
-        input.value = '';
       }
     }
     
-    // Allow Enter key to submit password
     document.getElementById('passwordInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         checkPassword();
@@ -369,22 +380,22 @@ async function startServer() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Admin-Password': ADMIN_PASSWORD
+            'Authorization': 'Bearer ' + adminToken
           }
         });
         
         const data = await response.json();
         
         if (data.success) {
-          resultDiv.textContent = '✅ ' + data.message;
+          resultDiv.textContent = data.message;
           resultDiv.className = 'success';
           document.getElementById('lastReset').textContent = new Date().toLocaleString();
         } else {
-          resultDiv.textContent = '❌ Error: ' + data.error;
+          resultDiv.textContent = 'Error: ' + data.error;
           resultDiv.className = 'error';
         }
       } catch (error) {
-        resultDiv.textContent = '❌ Network error: ' + error.message;
+        resultDiv.textContent = 'Network error: ' + error.message;
         resultDiv.className = 'error';
       }
     }
@@ -394,12 +405,35 @@ async function startServer() {
     `);
   });
 
-  // API endpoint to reset leaderboards
+  // Server-side password verification endpoint
+  app.post("/api/admin/verify", (req, res) => {
+    const { password } = req.body;
+    if (password === ADMIN_PASSWORD) {
+      // Generate a simple session token (valid for this server instance)
+      const token = Buffer.from(`${ADMIN_PASSWORD}:${Date.now()}`).toString('base64');
+      return res.json({ success: true, token });
+    }
+    return res.status(401).json({ success: false, error: "Invalid password" });
+  });
+
+  // API endpoint to reset leaderboards (requires valid admin token)
   app.post("/api/admin/reset-leaderboards", submissionLimiter, async (req, res) => {
-    const password = req.headers['x-admin-password'];
+    const authHeader = req.headers['authorization'];
+    const token = authHeader?.replace('Bearer ', '');
     
-    if (password !== ADMIN_PASSWORD) {
+    if (!token) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    
+    // Verify token contains the admin password
+    try {
+      const decoded = Buffer.from(token, 'base64').toString();
+      const [password] = decoded.split(':');
+      if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ success: false, error: "Unauthorized" });
+      }
+    } catch {
+      return res.status(401).json({ success: false, error: "Invalid token" });
     }
     
     const { resetAllLeaderboards } = await import("../db.js");

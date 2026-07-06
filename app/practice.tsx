@@ -278,11 +278,12 @@ export default function PracticeScreen() {
         setUserAnswer("");
         backgroundColor.value = colors.surface;
       } else {
-        // Session complete
+        // Session complete - calculate final correct count inline (setState is async)
+        const finalCorrect = isCorrect ? correctCount + 1 : correctCount;
         const time = Math.floor((Date.now() - startTime) / 1000);
-        const accuracy = Math.round((correctCount / questionCount) * 100);
+        const accuracy = Math.round((finalCorrect / questionCount) * 100);
         router.push(
-          `/results?correct=${correctCount}&total=${questionCount}&time=${time}&accuracy=${accuracy}&operations=${params.operations}&speedMode=${isSpeedMode}`
+          `/results?correct=${finalCorrect}&total=${questionCount}&time=${time}&accuracy=${accuracy}&operations=${params.operations}&speedMode=${isSpeedMode}`
         );
       }
     }, 600);

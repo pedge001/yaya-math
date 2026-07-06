@@ -98,11 +98,34 @@ export default function EnterInitialsDailyScreen() {
 
     setRetryMessage(null);
 
-    if (result.success) {
-      if (Platform.OS !== "web") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (result.success && result.data) {
+      const submissionResult = result.data;
+
+      // Check if the server actually saved the entry
+      if (submissionResult.success) {
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        router.push("/daily-challenge-leaderboard");
+      } else {
+        // Server responded but DB write failed
+        console.error("Daily challenge DB write failed:", submissionResult.error);
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+        if (Platform.OS === "web") {
+          alert("Unable to save your score. Please try again.");
+        } else {
+          Alert.alert(
+            "Submission Failed",
+            "Unable to save your score to the leaderboard. Please try again.",
+            [
+              { text: "Try Again", style: "default" },
+              { text: "Cancel", style: "cancel", onPress: () => router.push("/") }
+            ]
+          );
+        }
       }
-      router.push("/daily-challenge-leaderboard");
     } else {
       console.error("Failed to submit daily challenge score after retries:", result.error);
 

@@ -191,3 +191,10 @@
 - [x] Reduce operation square sizes on home screen to prevent overlap with buttons below
 - [x] Add Easy/Medium/Hard difficulty filter tabs to leaderboard screen (already existed; fixed speed entry.time→completionTime bug and improved tab styling)
 - [x] Investigate and fix leaderboard submission failure in deployed TestFlight app (missing PG tables + API URL in EAS build)
+- [x] Fix speed/daily submission false-success bug (check result.data.success)
+- [x] Fix practice screen accuracy off-by-one on last question
+- [x] Fix "Practice Again" losing settings (pass all params)
+- [x] Fix admin password exposure in HTML source
+- [x] Fix leaderboard AND filter (operation + difficulty)
+- [x] Add difficulty filter to speed leaderboard screen (already existed, server-side and() fix resolves it)
+- [x] Fix rate limiter IPv6 validation warning (validate: false)

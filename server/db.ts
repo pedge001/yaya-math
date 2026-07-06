@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { dailyChallengeLeaderboard, InsertDailyChallengeEntry, InsertLeaderboardEntry, InsertSpeedLeaderboardEntry, InsertUser, leaderboard, speedLeaderboard, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -107,14 +107,13 @@ export async function getTop10Leaderboard(operation?: "addition" | "subtraction"
   }
 
   try {
+    const conditions = [];
+    if (operation) conditions.push(eq(leaderboard.operation, operation));
+    if (difficulty) conditions.push(eq(leaderboard.difficulty, difficulty));
+    
     let query = db.select().from(leaderboard);
-    
-    if (operation) {
-      query = query.where(eq(leaderboard.operation, operation)) as any;
-    }
-    
-    if (difficulty) {
-      query = query.where(eq(leaderboard.difficulty, difficulty)) as any;
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
     }
     
     const results = await query
@@ -159,14 +158,13 @@ export async function getTop10SpeedLeaderboard(operation?: "addition" | "subtrac
   }
 
   try {
+    const conditions = [];
+    if (operation) conditions.push(eq(speedLeaderboard.operation, operation));
+    if (difficulty) conditions.push(eq(speedLeaderboard.difficulty, difficulty));
+    
     let query = db.select().from(speedLeaderboard);
-    
-    if (operation) {
-      query = query.where(eq(speedLeaderboard.operation, operation)) as any;
-    }
-    
-    if (difficulty) {
-      query = query.where(eq(speedLeaderboard.difficulty, difficulty)) as any;
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
     }
     
     const results = await query

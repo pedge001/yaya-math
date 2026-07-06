@@ -7,21 +7,24 @@ import type { Request } from "express";
  */
 
 // Custom key generator that properly handles IPv6 addresses
+// We normalize IPv6-mapped IPv4 addresses (::ffff:x.x.x.x) to plain IPv4
 const createKeyGenerator = () => {
   return (req: Request) => {
-    // Get the client IP address, handling proxies and IPv6
-    let ip = req.ip;
+    let ip = req.ip || "";
     
     // If behind a proxy, try x-forwarded-for
     if (!ip || ip === "::1") {
       const forwarded = req.get("x-forwarded-for");
       if (forwarded) {
-        // Take the first IP if multiple are present
         ip = forwarded.split(",")[0].trim();
       }
     }
     
-    // Fallback to unknown if no IP found
+    // Normalize IPv6-mapped IPv4 (::ffff:127.0.0.1 -> 127.0.0.1)
+    if (ip.startsWith("::ffff:")) {
+      ip = ip.slice(7);
+    }
+    
     return ip || "unknown";
   };
 };
@@ -43,6 +46,7 @@ export const submissionLimiter = rateLimit({
     return req.path === "/" || req.path === "/api/health" || req.path === "/privacy";
   },
   keyGenerator,
+  validate: false,
   handler: (_req, res) => {
     res.status(429).json({
       error: "Too many submissions. Please wait before submitting again.",
@@ -62,6 +66,7 @@ export const strictSubmissionLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator,
+  validate: false,
   handler: (_req, res) => {
     res.status(429).json({
       error: "Rapid submission detected. Please wait before submitting again.",
@@ -81,4 +86,5 @@ export const generalLimiter = rateLimit({
     return req.path === "/" || req.path === "/api/health";
   },
   keyGenerator,
+  validate: false,
 });

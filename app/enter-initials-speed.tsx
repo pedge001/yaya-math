@@ -100,11 +100,34 @@ export default function EnterInitialsSpeedScreen() {
 
     setRetryMessage(null);
 
-    if (result.success) {
-      if (Platform.OS !== "web") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (result.success && result.data) {
+      const submissionResult = result.data;
+
+      // Check if the server actually saved the entry
+      if (submissionResult.success) {
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        router.push("/speed-leaderboard");
+      } else {
+        // Server responded but DB write failed
+        console.error("Speed submission DB write failed:", submissionResult.error);
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+        if (Platform.OS === "web") {
+          alert("Unable to save your time. Please try again.");
+        } else {
+          Alert.alert(
+            "Submission Failed",
+            "Unable to save your time to the leaderboard. Please try again.",
+            [
+              { text: "Try Again", style: "default" },
+              { text: "Cancel", style: "cancel", onPress: () => router.push("/") }
+            ]
+          );
+        }
       }
-      router.push("/speed-leaderboard");
     } else {
       console.error("Failed to submit speed time after retries:", result.error);
 
