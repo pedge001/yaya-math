@@ -202,3 +202,4 @@
 - [x] Add "Personal Best" badge on leaderboard to highlight user's current rank
 - [x] Add daily streak counter on home screen (consecutive days practiced)
 - [x] Display current and longest all-time streak on Profile screen
+- [x] Add total problems solved counter on Profile screen

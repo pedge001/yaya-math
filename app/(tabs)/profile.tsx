@@ -186,6 +186,46 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {/* Stats Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Stats</Text>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+            backgroundColor: 'rgba(182, 255, 251, 0.05)',
+            borderWidth: 1,
+            borderColor: 'rgba(182, 255, 251, 0.2)',
+            borderRadius: 12,
+            padding: spacing.lg,
+          }}>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 28, fontWeight: '700', color: colors.primary }}>
+                {submissions.reduce((sum, s) => sum + s.totalProblems, 0)}
+              </Text>
+              <Text style={{ fontSize: fontSize.sm, color: '#9CA3AF', marginTop: 4 }}>Problems Solved</Text>
+            </View>
+            <View style={{ width: 1, backgroundColor: 'rgba(182, 255, 251, 0.2)' }} />
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 28, fontWeight: '700', color: colors.success }}>
+                {submissions.reduce((sum, s) => sum + s.score, 0)}
+              </Text>
+              <Text style={{ fontSize: fontSize.sm, color: '#9CA3AF', marginTop: 4 }}>Correct Answers</Text>
+            </View>
+            <View style={{ width: 1, backgroundColor: 'rgba(182, 255, 251, 0.2)' }} />
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 28, fontWeight: '700', color: colors.warning }}>
+                {submissions.length > 0
+                  ? Math.round((submissions.reduce((sum, s) => sum + s.score, 0) / submissions.reduce((sum, s) => sum + s.totalProblems, 0)) * 100)
+                  : 0}%
+              </Text>
+              <Text style={{ fontSize: fontSize.sm, color: '#9CA3AF', marginTop: 4 }}>Accuracy</Text>
+            </View>
+          </View>
+          <Text style={{ fontSize: fontSize.xs, color: '#9CA3AF', textAlign: 'center', marginTop: spacing.sm }}>
+            {submissions.length} {submissions.length === 1 ? 'session' : 'sessions'} completed
+          </Text>
+        </View>
+
         {/* Privacy Policy Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Privacy & Legal</Text>
