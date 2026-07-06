@@ -6,6 +6,7 @@ import * as Haptics from "expo-haptics";
 import { ScreenContainer } from "@/components/screen-container";
 import { useThemeColors, spacing, borderRadius, fontSize, fontWeight } from "@/constants/styles";
 import { playSound } from "@/lib/sound-manager";
+import { getShowResultsPreference, setShowResultsPreference } from "@/lib/show-results-storage";
 import { getQuestionCount, setQuestionCount, getValidCounts, type QuestionCount } from "@/lib/question-count";
 import { getStreakData, getStreakBadge } from "@/lib/streak-tracker";
 
@@ -41,7 +42,7 @@ export default function OperationSelectionScreen() {
   const colors = useThemeColors();
   const router = useRouter();
 
-  // Load saved question count and streak on mount
+  // Load saved question count, streak, and Show Results preference on mount
   useEffect(() => {
     const loadSettings = async () => {
       const saved = await getQuestionCount();
@@ -52,6 +53,9 @@ export default function OperationSelectionScreen() {
       const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
       const isActive = streakData.lastPracticeDate === today || streakData.lastPracticeDate === yesterday;
       setStreak(isActive ? streakData.currentStreak : 0);
+      // Load Show Results preference
+      const showResultsEnabled = await getShowResultsPreference();
+      setShowResults(showResultsEnabled);
     };
     loadSettings();
   }, []);
@@ -261,6 +265,15 @@ export default function OperationSelectionScreen() {
     setIsSpeedMode(!isSpeedMode);
   };
 
+  const toggleShowResults = async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    const newValue = !showResults;
+    setShowResults(newValue);
+    await setShowResultsPreference(newValue);
+  };
+
   const toggleDifficulty = (newDifficulty: Difficulty) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -369,12 +382,7 @@ export default function OperationSelectionScreen() {
           </TouchableOpacity>
           {/* Show Results Checkbox */}
           <TouchableOpacity
-            onPress={() => {
-              if (Platform.OS !== "web") {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }
-              setShowResults(!showResults);
-            }}
+            onPress={toggleShowResults}
             style={styles.showResultsRow}
           >
             <View

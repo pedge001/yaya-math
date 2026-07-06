@@ -153,6 +153,18 @@ export default function ResultsScreen() {
     router.push(`/practice?operations=${operations}&speedMode=${isSpeedMode}&difficulty=${difficulty}&questionCount=${total}&showResults=${showResults}`);
   };
 
+  const handleRetryMissed = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    if (incorrectQuestions.length === 0) return;
+    const retryData = encodeURIComponent(JSON.stringify(incorrectQuestions));
+    router.push({
+      pathname: "/retry-missed",
+      params: { operations, difficulty, retryData, showResults: showResults.toString() },
+    });
+  };
+
   const handleChangeOperations = () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -247,6 +259,18 @@ export default function ResultsScreen() {
               >
                 <Text className="text-center text-base font-bold" style={{ color: "#000000" }}>
                   🏆 Submit to Leaderboard
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {incorrectQuestions.length > 0 && (
+              <TouchableOpacity
+                onPress={handleRetryMissed}
+                className="py-4 rounded-full border-2"
+                style={{ borderColor: colors.error }}
+              >
+                <Text className="text-center text-base font-bold" style={{ color: colors.error }}>
+                  🔄 Retry Missed ({incorrectQuestions.length})
                 </Text>
               </TouchableOpacity>
             )}

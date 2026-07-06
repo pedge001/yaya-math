@@ -211,3 +211,5 @@
 - [x] Add "Show Results" checkbox next to Speed Mode on home screen
 - [x] Show correct answer after wrong response during practice when "Show Results" is enabled
 - [x] Display all incorrect questions with correct answers at end of round
+- [x] Persist Show Results preference with AsyncStorage across sessions
+- [x] Add "Retry Missed" button on results screen to practice only incorrect questions
