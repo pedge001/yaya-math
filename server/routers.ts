@@ -41,8 +41,10 @@ export const appRouter = router({
           difficulty: z.enum(["easy", "medium", "hard"]),
         })
       )
-      .mutation(async ({ input }) => {
-        return await db.addLeaderboardEntry(input);
+      .mutation(async ({ input, ctx }) => {
+        // Attach userId if user is authenticated
+        const userId = ctx.user?.openId || null;
+        return await db.addLeaderboardEntry({ ...input, userId });
       }),
   }),
 
@@ -68,8 +70,10 @@ export const appRouter = router({
           difficulty: z.enum(["easy", "medium", "hard"]),
         })
       )
-      .mutation(async ({ input }) => {
-        return await db.addSpeedLeaderboardEntry(input);
+      .mutation(async ({ input, ctx }) => {
+        // Attach userId if user is authenticated
+        const userId = ctx.user?.openId || null;
+        return await db.addSpeedLeaderboardEntry({ ...input, userId });
       }),
   }),
 
@@ -86,8 +90,10 @@ export const appRouter = router({
           challengeDate: z.string().length(10), // YYYY-MM-DD
         })
       )
-      .mutation(async ({ input }) => {
-        return await db.addDailyChallengeEntry(input);
+      .mutation(async ({ input, ctx }) => {
+        // Attach userId if user is authenticated
+        const userId = ctx.user?.openId || null;
+        return await db.addDailyChallengeEntry({ ...input, userId });
       }),
   }),
 });

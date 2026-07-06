@@ -42,9 +42,12 @@ export async function runAutoMigration(): Promise<void> {
         "totalProblems" INTEGER NOT NULL,
         "operation" TEXT NOT NULL,
         "difficulty" TEXT NOT NULL DEFAULT 'easy',
+        "userId" VARCHAR(64),
         "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    // Add userId column if table already exists without it
+    await client.query(`ALTER TABLE "leaderboard" ADD COLUMN IF NOT EXISTS "userId" VARCHAR(64);`).catch(() => {});
     console.log("[AutoMigrate] ✓ leaderboard table ready");
 
     // Create speed_leaderboard table
@@ -56,9 +59,12 @@ export async function runAutoMigration(): Promise<void> {
         "totalProblems" INTEGER NOT NULL,
         "operation" TEXT NOT NULL,
         "difficulty" TEXT NOT NULL DEFAULT 'easy',
+        "userId" VARCHAR(64),
         "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    // Add userId column if table already exists without it
+    await client.query(`ALTER TABLE "speed_leaderboard" ADD COLUMN IF NOT EXISTS "userId" VARCHAR(64);`).catch(() => {});
     console.log("[AutoMigrate] ✓ speed_leaderboard table ready");
 
     // Create daily_challenge_leaderboard table
@@ -69,9 +75,12 @@ export async function runAutoMigration(): Promise<void> {
         "score" INTEGER NOT NULL,
         "totalProblems" INTEGER NOT NULL,
         "challengeDate" VARCHAR(10) NOT NULL,
+        "userId" VARCHAR(64),
         "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    // Add userId column if table already exists without it
+    await client.query(`ALTER TABLE "daily_challenge_leaderboard" ADD COLUMN IF NOT EXISTS "userId" VARCHAR(64);`).catch(() => {});
     console.log("[AutoMigrate] ✓ daily_challenge_leaderboard table ready");
 
     // Create users table (needed for auth)

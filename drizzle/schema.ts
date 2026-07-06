@@ -22,7 +22,7 @@ export type InsertUser = typeof users.$inferInsert;
 
 /**
  * Leaderboard table for tracking high scores.
- * No user authentication required - uses initials instead.
+ * userId is optional - links to authenticated user when available.
  */
 export const leaderboard = pgTable("leaderboard", {
   id: serial("id").primaryKey(),
@@ -31,6 +31,7 @@ export const leaderboard = pgTable("leaderboard", {
   totalProblems: integer("totalProblems").notNull(),
   operation: text("operation").notNull(), // 'addition' | 'subtraction' | 'multiplication' | 'division'
   difficulty: text("difficulty").default("easy").notNull(), // 'easy' | 'medium' | 'hard'
+  userId: varchar("userId", { length: 64 }), // Optional: Google openId of the submitter
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -39,6 +40,7 @@ export type InsertLeaderboardEntry = typeof leaderboard.$inferInsert;
 
 /**
  * Speed mode leaderboard for tracking fastest completion times.
+ * userId is optional - links to authenticated user when available.
  */
 export const speedLeaderboard = pgTable("speed_leaderboard", {
   id: serial("id").primaryKey(),
@@ -47,6 +49,7 @@ export const speedLeaderboard = pgTable("speed_leaderboard", {
   totalProblems: integer("totalProblems").notNull(),
   operation: text("operation").notNull(), // 'addition' | 'subtraction' | 'multiplication' | 'division'
   difficulty: text("difficulty").default("easy").notNull(), // 'easy' | 'medium' | 'hard'
+  userId: varchar("userId", { length: 64 }), // Optional: Google openId of the submitter
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -55,6 +58,7 @@ export type InsertSpeedLeaderboardEntry = typeof speedLeaderboard.$inferInsert;
 
 /**
  * Daily challenge leaderboard - resets every 24 hours.
+ * userId is optional - links to authenticated user when available.
  */
 export const dailyChallengeLeaderboard = pgTable("daily_challenge_leaderboard", {
   id: serial("id").primaryKey(),
@@ -62,6 +66,7 @@ export const dailyChallengeLeaderboard = pgTable("daily_challenge_leaderboard", 
   score: integer("score").notNull(),
   totalProblems: integer("totalProblems").notNull(),
   challengeDate: varchar("challengeDate", { length: 10 }).notNull(), // YYYY-MM-DD format
+  userId: varchar("userId", { length: 64 }), // Optional: Google openId of the submitter
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

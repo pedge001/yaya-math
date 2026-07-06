@@ -205,6 +205,6 @@
 - [x] Add total problems solved counter on Profile screen
 - [x] Implement Google OAuth login (server-side flow, user table, session management)
 - [x] Build client-side login UI and auth state management
-- [ ] Connect user accounts to leaderboard and progress data sync
+- [x] Connect user accounts to leaderboard and progress data sync (userId column added to all leaderboard tables)
 - [x] Add question count filter (10, 20, 30) to leaderboard screen
 - [x] Reduce operation card button sizes by 25% to prevent overlap with Speed Mode button
