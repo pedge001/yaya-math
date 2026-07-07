@@ -13,6 +13,8 @@ import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system/legacy";
 import {
   getDailyChallengeState,
   completeDailyChallenge,
@@ -43,6 +45,7 @@ export default function DailyChallengeScreen() {
   const [showCorrect, setShowCorrect] = useState(false);
   const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
   const [newBadges, setNewBadges] = useState<string[]>([]);
+  const [isSharing, setIsSharing] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -104,6 +107,45 @@ export default function DailyChallengeScreen() {
     } else {
       setCurrentIdx(nextIdx);
       setTimeout(() => inputRef.current?.focus(), 200);
+    }
+  };
+
+  const handleShare = async (score: number, currentStreak: number) => {
+    if (isSharing) return;
+    setIsSharing(true);
+    try {
+      const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      const emoji = score === 10 ? "🏆" : score >= 7 ? "🌟" : "✅";
+      const streakLine = currentStreak > 1 ? `🔥 ${currentStreak} day streak!\n` : "";
+      const scoreBar = Array.from({ length: 10 }, (_, i) => i < score ? "🟩" : "🟥").join("");
+      const message = `${emoji} YaYa Math Daily Challenge — ${today}\n\nScore: ${score}/10\n${scoreBar}\n${streakLine}\nCan you beat me? 📱`;
+
+      if (Platform.OS === "web") {
+        const available = await Sharing.isAvailableAsync();
+        if (available) {
+          // Web Share API — write to a temp file and share
+          const fileUri = (FileSystem.cacheDirectory ?? "") + "daily-result.txt";
+          await FileSystem.writeAsStringAsync(fileUri, message);
+          await Sharing.shareAsync(fileUri, { dialogTitle: "Share your Daily Challenge result" });
+        } else {
+          // Fallback: copy to clipboard via web API
+          await (navigator as any).clipboard?.writeText(message);
+          alert("Result copied to clipboard!");
+        }
+      } else {
+        // Native: write text to a temp file and share
+        const fileUri = (FileSystem.cacheDirectory ?? "") + "daily-result.txt";
+        await FileSystem.writeAsStringAsync(fileUri, message);
+        await Sharing.shareAsync(fileUri, {
+          mimeType: "text/plain",
+          dialogTitle: "Share your Daily Challenge result",
+          UTI: "public.plain-text",
+        });
+      }
+    } catch (e) {
+      // Sharing cancelled or failed — silently ignore
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -254,9 +296,26 @@ export default function DailyChallengeScreen() {
               ))}
             </View>
 
+            {/* Share button */}
+            <TouchableOpacity
+              onPress={() => handleShare(score, streak?.currentStreak ?? 0)}
+              disabled={isSharing}
+              className="w-full py-4 rounded-2xl items-center"
+              style={{
+                backgroundColor: "transparent",
+                borderWidth: 2,
+                borderColor: colors.primary,
+                opacity: isSharing ? 0.6 : 1,
+              }}
+            >
+              <Text className="text-base font-bold" style={{ color: colors.primary }}>
+                {isSharing ? "Sharing..." : "📤 Share Result"}
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               onPress={() => router.back()}
-              className="w-full py-4 rounded-2xl items-center mt-2 mb-8"
+              className="w-full py-4 rounded-2xl items-center mb-8"
               style={{ backgroundColor: colors.primary }}
             >
               <Text className="text-base font-bold" style={{ color: "#000" }}>Back to Home</Text>
