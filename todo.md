@@ -221,3 +221,6 @@
 - [x] Add accuracy trend line chart to Stats screen showing daily/weekly performance
 - [x] Add date labels on chart X-axis showing which sessions happened on which days
 - [x] Add weekly summary card with average accuracy this week vs last week and trend indicator
+- [x] Build daily challenge storage utility (seeded daily problems, streak tracking, completion badge)
+- [x] Build daily challenge screen with 10 mixed-operation problems and completion badge
+- [x] Add Daily Challenge entry point on home screen with streak counter display

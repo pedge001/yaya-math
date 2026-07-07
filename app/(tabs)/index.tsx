@@ -9,6 +9,7 @@ import { playSound } from "@/lib/sound-manager";
 import { getShowResultsPreference, setShowResultsPreference } from "@/lib/show-results-storage";
 import { getQuestionCount, setQuestionCount, getValidCounts, type QuestionCount } from "@/lib/question-count";
 import { getStreakData, getStreakBadge } from "@/lib/streak-tracker";
+import { getDailyChallengeState, getStreakState } from "@/lib/daily-challenge";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 type Difficulty = "easy" | "medium" | "hard";
@@ -39,6 +40,8 @@ export default function OperationSelectionScreen() {
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [questionCount, setQuestionCountState] = useState<QuestionCount>(20);
   const [streak, setStreak] = useState(0);
+  const [dailyCompleted, setDailyCompleted] = useState(false);
+  const [dailyStreak, setDailyStreak] = useState(0);
   const colors = useThemeColors();
   const router = useRouter();
 
@@ -56,6 +59,13 @@ export default function OperationSelectionScreen() {
       // Load Show Results preference
       const showResultsEnabled = await getShowResultsPreference();
       setShowResults(showResultsEnabled);
+      // Load daily challenge state
+      const [dailyChallenge, dailyChallengeStreak] = await Promise.all([
+        getDailyChallengeState(),
+        getStreakState(),
+      ]);
+      setDailyCompleted(dailyChallenge.completed);
+      setDailyStreak(dailyChallengeStreak.currentStreak);
     };
     loadSettings();
   }, []);
@@ -220,6 +230,16 @@ export default function OperationSelectionScreen() {
     questionCountButtonText: {
       fontSize: fontSize.xs,
       fontWeight: fontWeight.semibold,
+    },
+    dailyChallengeButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.xl,
+      borderWidth: 1.5,
+      marginBottom: spacing.sm,
     },
     startButton: {
       paddingVertical: spacing.md,
@@ -462,6 +482,36 @@ export default function OperationSelectionScreen() {
             ))}
           </View>
         </View>
+
+        {/* Daily Challenge Button */}
+        <TouchableOpacity
+          onPress={() => router.push('/daily-challenge')}
+          style={[
+            styles.dailyChallengeButton,
+            {
+              borderColor: dailyCompleted ? colors.success : colors.primary,
+              backgroundColor: dailyCompleted ? `${colors.success}15` : `${colors.primary}15`,
+            },
+          ]}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Text style={{ fontSize: 20 }}>{dailyCompleted ? '\u2705' : '\u26a1'}</Text>
+            <View>
+              <Text style={{ fontSize: fontSize.sm, fontWeight: fontWeight.bold, color: dailyCompleted ? colors.success : colors.primary }}>
+                {dailyCompleted ? 'Daily Challenge Done!' : 'Daily Challenge'}
+              </Text>
+              <Text style={{ fontSize: fontSize.xs, color: colors.muted }}>
+                {dailyCompleted ? 'Come back tomorrow' : '10 mixed problems \u00b7 resets daily'}
+              </Text>
+            </View>
+          </View>
+          {dailyStreak > 0 && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={{ fontSize: 14 }}>\ud83d\udd25</Text>
+              <Text style={{ fontSize: fontSize.xs, fontWeight: fontWeight.bold, color: colors.warning }}>{dailyStreak}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
         {/* Start Button */}
         <TouchableOpacity

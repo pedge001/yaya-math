@@ -1,268 +1,384 @@
-import { useState, useEffect } from "react";
-import { Text, View, TouchableOpacity, Platform } from "react-native";
-import { useRouter } from "expo-router";
+import { useState, useEffect, useRef } from "react";
+import {
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+  Animated,
+} from "react-native";
+import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
+import {
+  getDailyChallengeState,
+  completeDailyChallenge,
+  getStreakState,
+  BADGE_INFO,
+  type DailyProblem,
+  type DailyChallengeState,
+  type DailyStreakState,
+} from "@/lib/daily-challenge";
 
-type Operation = "addition" | "subtraction" | "multiplication" | "division";
+const OPERATION_SYMBOLS: Record<string, string> = {
+  addition: "+",
+  subtraction: "−",
+  multiplication: "×",
+  division: "÷",
+};
 
-interface Problem {
-  num1: number;
-  num2: number;
-  operation: Operation;
-  answer: number;
-}
-
-const TOTAL_PROBLEMS = 20; // Daily challenge is 20 problems
-
-function generateDailyProblems(seed: string): Problem[] {
-  // Use date as seed for consistent daily problems
-  const seedNum = seed.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const rng = (index: number) => {
-    const x = Math.sin(seedNum + index) * 10000;
-    return x - Math.floor(x);
-  };
-
-  const problems: Problem[] = [];
-  const operations: Operation[] = ["addition", "subtraction", "multiplication", "division"];
-
-  for (let i = 0; i < TOTAL_PROBLEMS; i++) {
-    const operation = operations[Math.floor(rng(i * 4) * operations.length)];
-    let num1: number, num2: number, answer: number;
-
-    switch (operation) {
-      case "addition":
-        num1 = Math.floor(rng(i * 4 + 1) * 50) + 1;
-        num2 = Math.floor(rng(i * 4 + 2) * 50) + 1;
-        answer = num1 + num2;
-        break;
-      case "subtraction":
-        num1 = Math.floor(rng(i * 4 + 1) * 50) + 1;
-        num2 = Math.floor(rng(i * 4 + 2) * num1) + 1;
-        answer = num1 - num2;
-        break;
-      case "multiplication":
-        num1 = Math.floor(rng(i * 4 + 1) * 10) + 1;
-        num2 = Math.floor(rng(i * 4 + 2) * 10) + 1;
-        answer = num1 * num2;
-        break;
-      case "division":
-        num2 = Math.floor(rng(i * 4 + 1) * 10) + 1;
-        answer = Math.floor(rng(i * 4 + 2) * 10) + 1;
-        num1 = num2 * answer;
-        break;
-    }
-
-    problems.push({ num1, num2, operation, answer });
-  }
-
-  return problems;
-}
-
-function getOperationSymbol(operation: Operation): string {
-  switch (operation) {
-    case "addition":
-      return "+";
-    case "subtraction":
-      return "−";
-    case "multiplication":
-      return "×";
-    case "division":
-      return "÷";
-  }
-}
+type Phase = "loading" | "already_done" | "playing" | "complete";
 
 export default function DailyChallengeScreen() {
-  const router = useRouter();
   const colors = useColors();
+  const [phase, setPhase] = useState<Phase>("loading");
+  const [challenge, setChallenge] = useState<DailyChallengeState | null>(null);
+  const [streak, setStreak] = useState<DailyStreakState | null>(null);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [answer, setAnswer] = useState("");
+  const [results, setResults] = useState<boolean[]>([]);
+  const [showCorrect, setShowCorrect] = useState(false);
+  const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
+  const [newBadges, setNewBadges] = useState<string[]>([]);
+  const inputRef = useRef<TextInput>(null);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  const [problems] = useState<Problem[]>(generateDailyProblems(today));
-  const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
-  const [userAnswer, setUserAnswer] = useState("");
-  const [correctCount, setCorrectCount] = useState(0);
+  useEffect(() => {
+    load();
+  }, []);
 
-  const backgroundColor = useSharedValue(colors.surface);
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    backgroundColor: backgroundColor.value,
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handleNumberPress = (num: string) => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setUserAnswer((prev) => prev + num);
+  const load = async () => {
+    const [ch, st] = await Promise.all([getDailyChallengeState(), getStreakState()]);
+    setChallenge(ch);
+    setStreak(st);
+    setPhase(ch.completed ? "already_done" : "playing");
   };
 
-  const handleBackspace = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setUserAnswer((prev) => prev.slice(0, -1));
-  };
+  const currentProblem: DailyProblem | null =
+    challenge && currentIdx < challenge.problems.length
+      ? challenge.problems[currentIdx]
+      : null;
 
   const handleSubmit = () => {
-    if (userAnswer === "" || problems.length === 0) return;
-
-    const currentProblem = problems[currentProblemIndex];
-    const isCorrect = parseInt(userAnswer) === currentProblem.answer;
+    if (!currentProblem || !answer.trim()) return;
+    const userAnswer = parseInt(answer.trim(), 10);
+    const correct = userAnswer === currentProblem.answer;
 
     if (Platform.OS !== "web") {
-      Haptics.notificationAsync(
-        isCorrect ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error
-      );
+      if (correct) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
     }
 
-    // Animate feedback
-    backgroundColor.value = withSequence(
-      withTiming(isCorrect ? "#22C55E" : "#EF4444", { duration: 200 }),
-      withTiming(colors.surface, { duration: 300 })
-    );
+    const newResults = [...results, correct];
+    setResults(newResults);
 
-    scale.value = withSequence(withTiming(1.05, { duration: 100 }), withTiming(1, { duration: 100 }));
-
-    setTimeout(() => {
-      if (currentProblemIndex + 1 >= TOTAL_PROBLEMS) {
-        router.push({
-          pathname: "/daily-challenge-results",
-          params: {
-            correct: correctCount + (isCorrect ? 1 : 0),
-            total: TOTAL_PROBLEMS,
-            challengeDate: today,
-          },
-        });
-      } else {
-        setCurrentProblemIndex((prev) => prev + 1);
-        setUserAnswer("");
-      }
-
-      if (isCorrect) {
-        setCorrectCount((prev) => prev + 1);
-      }
-    }, 500);
+    if (!correct) {
+      setCorrectAnswer(currentProblem.answer);
+      setShowCorrect(true);
+      setTimeout(() => advance(newResults), 1500);
+    } else {
+      advance(newResults);
+    }
   };
 
-  if (problems.length === 0) {
+  const advance = (currentResults: boolean[]) => {
+    setShowCorrect(false);
+    setCorrectAnswer(null);
+    setAnswer("");
+
+    Animated.sequence([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+    ]).start();
+
+    const nextIdx = currentIdx + 1;
+    if (challenge && nextIdx >= challenge.problems.length) {
+      const score = currentResults.filter(Boolean).length;
+      finishChallenge(score, currentResults);
+    } else {
+      setCurrentIdx(nextIdx);
+      setTimeout(() => inputRef.current?.focus(), 200);
+    }
+  };
+
+  const finishChallenge = async (score: number, finalResults: boolean[]) => {
+    const updatedStreak = await completeDailyChallenge(score);
+    const prevBadges = streak?.badges ?? [];
+    const earned = updatedStreak.badges.filter((b) => !prevBadges.includes(b));
+    setStreak(updatedStreak);
+    setNewBadges(earned);
+    setResults(finalResults);
+    setPhase("complete");
+  };
+
+  // ── Loading ──────────────────────────────────────────────────────────────
+  if (phase === "loading") {
     return (
       <ScreenContainer className="p-6">
-        <Text className="text-xl text-muted">Loading...</Text>
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-lg text-muted">Loading today's challenge...</Text>
+        </View>
       </ScreenContainer>
     );
   }
 
-  const currentProblem = problems[currentProblemIndex];
+  // ── Already done today ───────────────────────────────────────────────────
+  if (phase === "already_done" && challenge) {
+    const score = challenge.score ?? 0;
+    return (
+      <ScreenContainer className="p-6">
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View className="flex-row items-center mb-8">
+            <TouchableOpacity onPress={() => router.back()} style={{ padding: 4 }}>
+              <Text className="text-base" style={{ color: colors.primary }}>← Back</Text>
+            </TouchableOpacity>
+          </View>
+          <View className="flex-1 items-center justify-center gap-6">
+            <Text className="text-5xl">✅</Text>
+            <Text className="text-2xl font-bold text-foreground text-center">
+              Already completed today!
+            </Text>
+            <Text className="text-base text-muted text-center">
+              You scored {score}/10 on today's challenge.
+            </Text>
+            {streak && (
+              <View
+                className="w-full rounded-2xl p-5 items-center gap-2"
+                style={{ backgroundColor: colors.surface }}
+              >
+                <Text className="text-4xl">🔥</Text>
+                <Text className="text-3xl font-bold" style={{ color: colors.primary }}>
+                  {streak.currentStreak} day streak
+                </Text>
+                <Text className="text-sm text-muted">
+                  Longest: {streak.longestStreak} days · Total: {streak.totalChallengesCompleted} challenges
+                </Text>
+              </View>
+            )}
+            <Text className="text-sm text-muted text-center">
+              Come back tomorrow for a new challenge!
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="px-8 py-3 rounded-full"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <Text className="text-base font-bold" style={{ color: "#000" }}>Back to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </ScreenContainer>
+    );
+  }
+
+  // ── Complete ─────────────────────────────────────────────────────────────
+  if (phase === "complete" && challenge) {
+    const score = results.filter(Boolean).length;
+    const isPerfect = score === 10;
+    return (
+      <ScreenContainer className="p-6">
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View className="flex-1 items-center gap-6 pt-8">
+            <Text className="text-6xl">{isPerfect ? "🏆" : score >= 7 ? "🌟" : "✅"}</Text>
+            <Text className="text-2xl font-bold text-foreground text-center">
+              {isPerfect ? "Perfect Score!" : score >= 7 ? "Great Job!" : "Challenge Complete!"}
+            </Text>
+            <Text className="text-4xl font-bold" style={{ color: colors.primary }}>
+              {score} / 10
+            </Text>
+
+            {streak && (
+              <View
+                className="w-full rounded-2xl p-5 items-center gap-2"
+                style={{ backgroundColor: colors.surface }}
+              >
+                <Text className="text-4xl">🔥</Text>
+                <Text className="text-3xl font-bold" style={{ color: colors.primary }}>
+                  {streak.currentStreak} day streak
+                </Text>
+                <Text className="text-sm text-muted">
+                  Longest: {streak.longestStreak} days · Total: {streak.totalChallengesCompleted} challenges
+                </Text>
+              </View>
+            )}
+
+            {newBadges.length > 0 && (
+              <View className="w-full gap-3">
+                <Text className="text-base font-semibold text-foreground text-center">
+                  🎉 New Badge{newBadges.length > 1 ? "s" : ""} Earned!
+                </Text>
+                {newBadges.map((badge) => {
+                  const info = BADGE_INFO[badge];
+                  if (!info) return null;
+                  return (
+                    <View
+                      key={badge}
+                      className="flex-row items-center gap-3 p-4 rounded-xl"
+                      style={{ backgroundColor: `${colors.primary}20` }}
+                    >
+                      <Text className="text-3xl">{info.emoji}</Text>
+                      <View className="flex-1">
+                        <Text className="text-base font-bold text-foreground">{info.label}</Text>
+                        <Text className="text-sm text-muted">{info.description}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            <View className="w-full gap-2">
+              <Text className="text-base font-semibold text-foreground mb-1">Your Answers</Text>
+              {challenge.problems.map((p, idx) => (
+                <View
+                  key={idx}
+                  className="flex-row items-center justify-between px-4 py-2 rounded-lg"
+                  style={{
+                    backgroundColor: results[idx] ? `${colors.success}15` : `${colors.error}15`,
+                  }}
+                >
+                  <Text className="text-base text-foreground">
+                    {p.num1} {OPERATION_SYMBOLS[p.operation]} {p.num2}
+                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-base font-bold text-foreground">= {p.answer}</Text>
+                    <Text className="text-base">{results[idx] ? "✅" : "❌"}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-full py-4 rounded-2xl items-center mt-2 mb-8"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <Text className="text-base font-bold" style={{ color: "#000" }}>Back to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </ScreenContainer>
+    );
+  }
+
+  // ── Playing ──────────────────────────────────────────────────────────────
+  if (!currentProblem || !challenge) return null;
+
+  const progress = currentIdx / challenge.problems.length;
 
   return (
     <ScreenContainer className="p-6">
       <View className="flex-1">
         {/* Header */}
-        <View className="items-center mb-4">
-          <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
-            🌟 DAILY CHALLENGE 🌟
+        <View className="flex-row items-center justify-between mb-6">
+          <TouchableOpacity onPress={() => router.back()} style={{ padding: 4 }}>
+            <Text className="text-base" style={{ color: colors.primary }}>← Back</Text>
+          </TouchableOpacity>
+          <Text className="text-base font-semibold text-muted">
+            {currentIdx + 1} / {challenge.problems.length}
           </Text>
-          <Text className="text-sm text-muted">{today}</Text>
-        </View>
-
-        {/* Progress and Score */}
-        <View className="flex-row justify-between items-center mb-8">
-          <Text className="text-base font-medium text-muted">
-            Question {currentProblemIndex + 1} of {TOTAL_PROBLEMS}
-          </Text>
-          <Text className="text-base font-medium text-muted">
-            Score: {correctCount}/{currentProblemIndex}
-          </Text>
-        </View>
-
-        {/* Problem Display */}
-        <View className="flex-1 justify-center items-center">
-          <Animated.View
-            className="w-full p-8 rounded-3xl items-center justify-center"
-            style={animatedStyle}
-          >
-            <Text className="text-6xl font-bold text-foreground mb-4">
-              {currentProblem.num1} {getOperationSymbol(currentProblem.operation)} {currentProblem.num2} =
+          {streak && streak.currentStreak > 0 && (
+            <Text className="text-base font-semibold" style={{ color: colors.warning }}>
+              🔥 {streak.currentStreak}
             </Text>
-            <View className="h-16 w-48 border-b-4 items-center justify-center" style={{ borderColor: colors.primary }}>
-              <Text className="text-4xl font-bold text-foreground">{userAnswer || " "}</Text>
-            </View>
-          </Animated.View>
+          )}
         </View>
 
-        {/* Keypad */}
-        <View className="gap-3 pb-4">
-          <View className="flex-row gap-3">
-            {[1, 2, 3].map((num) => (
-              <TouchableOpacity
-                key={num}
-                onPress={() => handleNumberPress(num.toString())}
-                className="flex-1 py-6 rounded-2xl items-center justify-center"
-                style={{ backgroundColor: colors.surface }}
-              >
-                <Text className="text-3xl font-bold text-foreground">{num}</Text>
-              </TouchableOpacity>
-            ))}
+        {/* Progress bar */}
+        <View className="w-full h-2 rounded-full mb-8" style={{ backgroundColor: colors.border }}>
+          <View
+            className="h-2 rounded-full"
+            style={{ width: `${progress * 100}%`, backgroundColor: colors.primary }}
+          />
+        </View>
+
+        {/* Daily badge label */}
+        <View className="items-center mb-2">
+          <View
+            className="px-4 py-1 rounded-full"
+            style={{ backgroundColor: `${colors.primary}20` }}
+          >
+            <Text className="text-xs font-semibold" style={{ color: colors.primary }}>
+              ⚡ Daily Challenge
+            </Text>
           </View>
-          <View className="flex-row gap-3">
-            {[4, 5, 6].map((num) => (
-              <TouchableOpacity
-                key={num}
-                onPress={() => handleNumberPress(num.toString())}
-                className="flex-1 py-6 rounded-2xl items-center justify-center"
-                style={{ backgroundColor: colors.surface }}
-              >
-                <Text className="text-3xl font-bold text-foreground">{num}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <View className="flex-row gap-3">
-            {[7, 8, 9].map((num) => (
-              <TouchableOpacity
-                key={num}
-                onPress={() => handleNumberPress(num.toString())}
-                className="flex-1 py-6 rounded-2xl items-center justify-center"
-                style={{ backgroundColor: colors.surface }}
-              >
-                <Text className="text-3xl font-bold text-foreground">{num}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              onPress={handleBackspace}
-              className="flex-1 py-6 rounded-2xl items-center justify-center"
-              style={{ backgroundColor: colors.surface }}
-            >
-              <Text className="text-2xl font-bold text-foreground">⌫</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleNumberPress("0")}
-              className="flex-1 py-6 rounded-2xl items-center justify-center"
-              style={{ backgroundColor: colors.surface }}
-            >
-              <Text className="text-3xl font-bold text-foreground">0</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSubmit}
-              className="flex-1 py-6 rounded-2xl items-center justify-center"
-              style={{ backgroundColor: colors.primary }}
-              disabled={userAnswer === ""}
-            >
-              <Text className="text-2xl font-bold" style={{ color: "#000000" }}>
-                ✓
+        </View>
+
+        {/* Problem */}
+        <Animated.View style={{ opacity: fadeAnim }} className="flex-1 items-center justify-center gap-8">
+          <Text className="text-6xl font-bold text-foreground">
+            {currentProblem.num1} {OPERATION_SYMBOLS[currentProblem.operation]} {currentProblem.num2}
+          </Text>
+
+          {showCorrect ? (
+            <View className="items-center gap-2">
+              <Text className="text-xl font-semibold" style={{ color: colors.error }}>Incorrect</Text>
+              <Text className="text-3xl font-bold" style={{ color: colors.success }}>
+                Answer: {correctAnswer}
               </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          ) : (
+            <View className="w-full items-center gap-4">
+              <TextInput
+                ref={inputRef}
+                value={answer}
+                onChangeText={setAnswer}
+                keyboardType="number-pad"
+                returnKeyType="done"
+                onSubmitEditing={handleSubmit}
+                autoFocus
+                className="text-center text-4xl font-bold w-40 pb-2"
+                style={{
+                  borderBottomWidth: 2,
+                  borderColor: colors.primary,
+                  color: colors.foreground,
+                }}
+                placeholder="?"
+                placeholderTextColor={colors.muted}
+              />
+              <TouchableOpacity
+                onPress={handleSubmit}
+                className="px-10 py-4 rounded-2xl"
+                style={{
+                  backgroundColor: answer.trim() ? colors.primary : colors.border,
+                  opacity: answer.trim() ? 1 : 0.5,
+                }}
+              >
+                <Text
+                  className="text-lg font-bold"
+                  style={{ color: answer.trim() ? "#000" : colors.muted }}
+                >
+                  Submit
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </Animated.View>
+
+        {/* Dot progress indicators */}
+        <View className="flex-row justify-center gap-2 pb-4">
+          {challenge.problems.map((_, idx) => (
+            <View
+              key={idx}
+              className="w-6 h-6 rounded-full items-center justify-center"
+              style={{
+                backgroundColor:
+                  idx < results.length
+                    ? results[idx]
+                      ? colors.success
+                      : colors.error
+                    : idx === currentIdx
+                    ? `${colors.primary}40`
+                    : colors.border,
+              }}
+            />
+          ))}
         </View>
       </View>
     </ScreenContainer>
