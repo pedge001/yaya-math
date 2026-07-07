@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Text, View, TouchableOpacity, ScrollView, Platform, useWindowDimensions } from "react-native";
 import * as Haptics from "expo-haptics";
 import { CartesianChart, Line, useChartPressState } from "victory-native";
-import { Circle } from "@shopify/react-native-skia";
+import { Circle, matchFont } from "@shopify/react-native-skia";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { BackButton } from "@/components/back-button";
@@ -25,6 +25,99 @@ const OPERATION_LABELS: Record<Operation, string> = {
   division: "Division",
 };
 
+/** Format a YYYY-MM-DD date string to a short label like "Jul 6" */
+function formatDateShort(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const d = new Date(year, month - 1, day);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+/** Get the start of the week (Monday) for a given date */
+function getWeekStart(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // Monday as start
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function WeeklySummaryCard({
+  sessions,
+  colors,
+}: {
+  sessions: SessionSummary[];
+  colors: any;
+}) {
+  const now = new Date();
+  const thisWeekStart = getWeekStart(now);
+  const lastWeekStart = new Date(thisWeekStart);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+
+  const thisWeekSessions = sessions.filter((s) => {
+    const d = new Date(s.timestamp);
+    return d >= thisWeekStart;
+  });
+
+  const lastWeekSessions = sessions.filter((s) => {
+    const d = new Date(s.timestamp);
+    return d >= lastWeekStart && d < thisWeekStart;
+  });
+
+  const calcAvg = (arr: SessionSummary[]) =>
+    arr.length === 0
+      ? null
+      : Math.round(arr.reduce((sum, s) => sum + s.accuracy, 0) / arr.length);
+
+  const thisWeekAvg = calcAvg(thisWeekSessions);
+  const lastWeekAvg = calcAvg(lastWeekSessions);
+
+  const diff =
+    thisWeekAvg !== null && lastWeekAvg !== null ? thisWeekAvg - lastWeekAvg : null;
+
+  const trendColor =
+    diff === null ? colors.muted : diff > 0 ? colors.success : diff < 0 ? colors.error : colors.muted;
+  const trendIcon = diff === null ? "—" : diff > 0 ? "▲" : diff < 0 ? "▼" : "→";
+  const trendLabel =
+    diff === null
+      ? "No comparison yet"
+      : diff === 0
+      ? "Same as last week"
+      : `${Math.abs(diff)}% ${diff > 0 ? "better" : "lower"} than last week`;
+
+  return (
+    <View className="w-full rounded-2xl p-6 mb-6" style={{ backgroundColor: colors.surface }}>
+      <Text className="text-lg font-semibold text-foreground mb-4">This Week</Text>
+      <View className="flex-row gap-4">
+        <View className="flex-1 items-center p-3 rounded-xl" style={{ backgroundColor: `${colors.primary}15` }}>
+          <Text className="text-xs text-muted mb-1">This Week</Text>
+          <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
+            {thisWeekAvg !== null ? `${thisWeekAvg}%` : "—"}
+          </Text>
+          <Text className="text-xs text-muted mt-1">{thisWeekSessions.length} sessions</Text>
+        </View>
+        <View className="flex-1 items-center p-3 rounded-xl" style={{ backgroundColor: `${colors.border}50` }}>
+          <Text className="text-xs text-muted mb-1">Last Week</Text>
+          <Text className="text-2xl font-bold text-foreground">
+            {lastWeekAvg !== null ? `${lastWeekAvg}%` : "—"}
+          </Text>
+          <Text className="text-xs text-muted mt-1">{lastWeekSessions.length} sessions</Text>
+        </View>
+      </View>
+      {(thisWeekAvg !== null || lastWeekAvg !== null) && (
+        <View className="flex-row items-center mt-3 gap-1">
+          <Text className="text-base font-bold" style={{ color: trendColor }}>
+            {trendIcon}
+          </Text>
+          <Text className="text-sm" style={{ color: trendColor }}>
+            {trendLabel}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 function AccuracyChart({
   sessions,
   selectedOp,
@@ -34,77 +127,113 @@ function AccuracyChart({
   selectedOp: Operation | "overall";
   colors: any;
 }) {
-  const { width } = useWindowDimensions();
-  const chartWidth = width - 48; // 24px padding each side
+  const font = matchFont({ fontFamily: "System", fontSize: 10 });
 
   const { state, isActive } = useChartPressState({ x: 0, y: { accuracy: 0 } });
 
+  const chartData = useMemo(() => {
+    return sessions
+      .map((s, idx) => ({
+        x: idx,
+        accuracy:
+          selectedOp === "overall"
+            ? s.accuracy
+            : (s.operationAccuracy[selectedOp] ?? null),
+        date: s.date,
+      }))
+      .filter((d) => d.accuracy !== null) as Array<{ x: number; accuracy: number; date: string }>;
+  }, [sessions, selectedOp]);
+
+  // Build sparse date labels — show at most 5 evenly spaced labels
+  const dateLabels = useMemo(() => {
+    if (chartData.length === 0) return [];
+    const step = Math.max(1, Math.floor(chartData.length / 5));
+    return chartData
+      .filter((_, i) => i === 0 || i === chartData.length - 1 || i % step === 0)
+      .map((d) => ({ x: d.x, label: formatDateShort(d.date) }));
+  }, [chartData]);
+
+  // Active point tooltip
+  const activeIdx = isActive ? Math.round(state.x.value.value) : -1;
+  const activePoint = activeIdx >= 0 && activeIdx < chartData.length ? chartData[activeIdx] : null;
+
   if (sessions.length < 2) {
     return (
-      <View
-        className="items-center justify-center rounded-xl py-8"
-        style={{ backgroundColor: colors.surface }}
-      >
+      <View className="items-center justify-center rounded-xl py-8">
         <Text className="text-base text-muted">Complete 2+ sessions to see your trend</Text>
       </View>
     );
   }
 
-  const chartData = sessions.map((s, idx) => ({
-    x: idx,
-    accuracy:
-      selectedOp === "overall"
-        ? s.accuracy
-        : (s.operationAccuracy[selectedOp] ?? null),
-  })).filter((d) => d.accuracy !== null) as Array<{ x: number; accuracy: number }>;
-
   if (chartData.length < 2) {
     return (
-      <View
-        className="items-center justify-center rounded-xl py-8"
-        style={{ backgroundColor: colors.surface }}
-      >
+      <View className="items-center justify-center rounded-xl py-8">
         <Text className="text-base text-muted">No data for this operation yet</Text>
       </View>
     );
   }
 
   return (
-    <View style={{ height: 180, width: chartWidth }}>
-      <CartesianChart
-        data={chartData}
-        xKey="x"
-        yKeys={["accuracy"]}
-        domain={{ y: [0, 100] }}
-        chartPressState={state}
-        axisOptions={{
-          font: null,
-          tickCount: { x: 0, y: 5 },
-          labelColor: colors.muted,
-          lineColor: colors.border,
-          formatYLabel: (v) => `${v}%`,
-        }}
-      >
-        {({ points }) => (
-          <>
-            <Line
-              points={points.accuracy}
-              color={colors.primary}
-              strokeWidth={2.5}
-              animate={{ type: "timing", duration: 400 }}
-              curveType="natural"
-            />
-            {isActive && (
-              <Circle
-                cx={state.x.position}
-                cy={state.y.accuracy.position}
-                r={6}
+    <View>
+      {/* Tooltip */}
+      {activePoint && (
+        <View className="flex-row items-center justify-between mb-2 px-1">
+          <Text className="text-sm text-muted">{formatDateShort(activePoint.date)}</Text>
+          <Text className="text-sm font-bold" style={{ color: colors.primary }}>
+            {activePoint.accuracy}%
+          </Text>
+        </View>
+      )}
+
+      {/* Chart */}
+      <View style={{ height: 160 }}>
+        <CartesianChart
+          data={chartData}
+          xKey="x"
+          yKeys={["accuracy"]}
+          domain={{ y: [0, 100] }}
+          chartPressState={state}
+          axisOptions={{
+            font,
+            tickCount: { x: 0, y: 5 },
+            labelColor: colors.muted,
+            lineColor: colors.border,
+            formatYLabel: (v) => `${v}%`,
+            formatXLabel: () => "",
+          }}
+        >
+          {({ points }) => (
+            <>
+              <Line
+                points={points.accuracy}
                 color={colors.primary}
+                strokeWidth={2.5}
+                animate={{ type: "timing", duration: 400 }}
+                curveType="natural"
               />
-            )}
-          </>
-        )}
-      </CartesianChart>
+              {isActive && (
+                <Circle
+                  cx={state.x.position}
+                  cy={state.y.accuracy.position}
+                  r={6}
+                  color={colors.primary}
+                />
+              )}
+            </>
+          )}
+        </CartesianChart>
+      </View>
+
+      {/* Date labels row */}
+      {dateLabels.length > 0 && (
+        <View className="flex-row justify-between mt-1 px-1">
+          {dateLabels.map((item, i) => (
+            <Text key={i} className="text-xs" style={{ color: colors.muted }}>
+              {item.label}
+            </Text>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -192,11 +321,14 @@ export default function StatsScreen() {
           </View>
         </View>
 
+        {/* Weekly Summary Card */}
+        <WeeklySummaryCard sessions={totalStats.sessionHistory ?? []} colors={colors} />
+
         {/* Accuracy Trend Chart */}
         <View className="w-full rounded-2xl p-6 mb-6" style={{ backgroundColor: colors.surface }}>
           <Text className="text-lg font-semibold text-foreground mb-1">Accuracy Trend</Text>
           <Text className="text-sm text-muted mb-4">
-            {selectedOp === "overall" ? "Overall" : OPERATION_LABELS[selectedOp]} — last {Math.min(totalStats.sessionHistory?.length ?? 0, 30)} sessions
+            {selectedOp === "overall" ? "All Operations" : OPERATION_LABELS[selectedOp]} — last {Math.min(totalStats.sessionHistory?.length ?? 0, 30)} sessions
           </Text>
           <AccuracyChart
             sessions={totalStats.sessionHistory ?? []}

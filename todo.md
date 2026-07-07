@@ -219,3 +219,5 @@
 - [x] Record stats after each practice session completes
 - [x] Add Stats tab to navigation
 - [x] Add accuracy trend line chart to Stats screen showing daily/weekly performance
+- [x] Add date labels on chart X-axis showing which sessions happened on which days
+- [x] Add weekly summary card with average accuracy this week vs last week and trend indicator
