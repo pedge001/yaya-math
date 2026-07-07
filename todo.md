@@ -218,3 +218,4 @@
 - [x] Display most frequently missed problem types and number ranges in stats
 - [x] Record stats after each practice session completes
 - [x] Add Stats tab to navigation
+- [x] Add accuracy trend line chart to Stats screen showing daily/weekly performance

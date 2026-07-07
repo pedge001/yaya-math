@@ -29,6 +29,15 @@ export interface OperationStats {
   }>;
 }
 
+export interface SessionSummary {
+  date: string; // YYYY-MM-DD
+  timestamp: number;
+  accuracy: number;
+  totalProblems: number;
+  correctProblems: number;
+  operationAccuracy: Partial<Record<'addition' | 'subtraction' | 'multiplication' | 'division', number>>;
+}
+
 export interface UserStats {
   totalSessions: number;
   totalProblems: number;
@@ -41,6 +50,7 @@ export interface UserStats {
     division: OperationStats;
   };
   allProblems: ProblemStat[];
+  sessionHistory: SessionSummary[];
 }
 
 const STATS_KEY = 'yaya_user_stats';
@@ -63,16 +73,53 @@ export async function recordSession(problems: ProblemStat[]): Promise<void> {
     const stats = await getUserStats();
     stats.totalSessions++;
 
+    let sessionCorrect = 0;
+    const opCounts: Partial<Record<'addition' | 'subtraction' | 'multiplication' | 'division', { correct: number; total: number }>> = {};
+
     for (const problem of problems) {
       stats.allProblems.push(problem);
       stats.totalProblems++;
       if (problem.isCorrect) {
         stats.totalCorrect++;
+        sessionCorrect++;
       }
       updateOperationStats(stats, problem);
+
+      // Track per-operation accuracy for this session
+      if (!opCounts[problem.operation]) {
+        opCounts[problem.operation] = { correct: 0, total: 0 };
+      }
+      opCounts[problem.operation]!.total++;
+      if (problem.isCorrect) {
+        opCounts[problem.operation]!.correct++;
+      }
     }
 
     stats.overallAccuracy = Math.round((stats.totalCorrect / stats.totalProblems) * 100);
+
+    // Build session summary for trend chart
+    const now = Date.now();
+    const date = new Date(now).toISOString().split('T')[0];
+    const operationAccuracy: Partial<Record<'addition' | 'subtraction' | 'multiplication' | 'division', number>> = {};
+    for (const [op, counts] of Object.entries(opCounts) as Array<[string, { correct: number; total: number }]>) {
+      operationAccuracy[op as 'addition' | 'subtraction' | 'multiplication' | 'division'] =
+        Math.round((counts.correct / counts.total) * 100);
+    }
+
+    if (!stats.sessionHistory) stats.sessionHistory = [];
+    stats.sessionHistory.push({
+      date,
+      timestamp: now,
+      accuracy: Math.round((sessionCorrect / problems.length) * 100),
+      totalProblems: problems.length,
+      correctProblems: sessionCorrect,
+      operationAccuracy,
+    });
+
+    // Keep only last 30 sessions for chart
+    if (stats.sessionHistory.length > 30) {
+      stats.sessionHistory = stats.sessionHistory.slice(-30);
+    }
 
     await AsyncStorage.setItem(STATS_KEY, JSON.stringify(stats));
   } catch (error) {
@@ -111,6 +158,7 @@ function getEmptyStats(): UserStats {
       division: getEmptyOperationStats('division'),
     },
     allProblems: [],
+    sessionHistory: [],
   };
 }
 
