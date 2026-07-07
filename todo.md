@@ -226,3 +226,5 @@
 - [x] Add Daily Challenge entry point on home screen with streak counter display
 - [x] Add share button to Daily Challenge completion screen to share score and streak
 - [x] Add celebratory confetti animation on Daily Challenge completion and new badge earned
+- [x] Add Badges section to Profile tab showing all 6 badge types with earned/locked states and earned dates
+- [x] Enhance Daily Challenge share button to capture and share a screenshot of the completion screen

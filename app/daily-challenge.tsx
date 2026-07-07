@@ -10,12 +10,12 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
+import ViewShot, { captureRef } from "react-native-view-shot";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { Confetti } from "@/components/confetti";
 import { useColors } from "@/hooks/use-colors";
 import * as Sharing from "expo-sharing";
-import * as FileSystem from "expo-file-system/legacy";
 import {
   getDailyChallengeState,
   completeDailyChallenge,
@@ -48,6 +48,7 @@ export default function DailyChallengeScreen() {
   const [newBadges, setNewBadges] = useState<string[]>([]);
   const [isSharing, setIsSharing] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const cardRef = useRef<View>(null);
   const inputRef = useRef<TextInput>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -112,36 +113,40 @@ export default function DailyChallengeScreen() {
     }
   };
 
-  const handleShare = async (score: number, currentStreak: number) => {
+  const handleShare = async () => {
     if (isSharing) return;
     setIsSharing(true);
     try {
-      const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      const emoji = score === 10 ? "🏆" : score >= 7 ? "🌟" : "✅";
-      const streakLine = currentStreak > 1 ? `🔥 ${currentStreak} day streak!\n` : "";
-      const scoreBar = Array.from({ length: 10 }, (_, i) => i < score ? "🟩" : "🟥").join("");
-      const message = `${emoji} YaYa Math Daily Challenge — ${today}\n\nScore: ${score}/10\n${scoreBar}\n${streakLine}\nCan you beat me? 📱`;
-
       if (Platform.OS === "web") {
+        // Web: use Web Share API with text fallback
+        const score = results.filter(Boolean).length;
+        const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        const emoji = score === 10 ? "🏆" : score >= 7 ? "🌟" : "✅";
+        const streakLine = (streak?.currentStreak ?? 0) > 1 ? `🔥 ${streak!.currentStreak} day streak!\n` : "";
+        const scoreBar = Array.from({ length: 10 }, (_, i) => i < score ? "🟩" : "🟥").join("");
+        const message = `${emoji} YaYa Math Daily Challenge — ${today}\n\nScore: ${score}/10\n${scoreBar}\n${streakLine}\nCan you beat me? 📱`;
         const available = await Sharing.isAvailableAsync();
         if (available) {
-          // Web Share API — write to a temp file and share
+          const FileSystem = await import("expo-file-system/legacy");
           const fileUri = (FileSystem.cacheDirectory ?? "") + "daily-result.txt";
           await FileSystem.writeAsStringAsync(fileUri, message);
           await Sharing.shareAsync(fileUri, { dialogTitle: "Share your Daily Challenge result" });
         } else {
-          // Fallback: copy to clipboard via web API
           await (navigator as any).clipboard?.writeText(message);
           alert("Result copied to clipboard!");
         }
       } else {
-        // Native: write text to a temp file and share
-        const fileUri = (FileSystem.cacheDirectory ?? "") + "daily-result.txt";
-        await FileSystem.writeAsStringAsync(fileUri, message);
-        await Sharing.shareAsync(fileUri, {
-          mimeType: "text/plain",
+        // Native: capture the score card as an image and share it
+        if (!cardRef.current) throw new Error("Card ref not ready");
+        const uri = await captureRef(cardRef, {
+          format: "png",
+          quality: 0.95,
+          result: "tmpfile",
+        });
+        await Sharing.shareAsync(uri, {
+          mimeType: "image/png",
           dialogTitle: "Share your Daily Challenge result",
-          UTI: "public.plain-text",
+          UTI: "public.png",
         });
       }
     } catch (e) {
@@ -232,54 +237,82 @@ export default function DailyChallengeScreen() {
         <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View className="flex-1 items-center gap-6 pt-8">
-            <Text className="text-6xl">{isPerfect ? "🏆" : score >= 7 ? "🌟" : "✅"}</Text>
-            <Text className="text-2xl font-bold text-foreground text-center">
-              {isPerfect ? "Perfect Score!" : score >= 7 ? "Great Job!" : "Challenge Complete!"}
-            </Text>
-            <Text className="text-4xl font-bold" style={{ color: colors.primary }}>
-              {score} / 10
-            </Text>
 
-            {streak && (
-              <View
-                className="w-full rounded-2xl p-5 items-center gap-2"
-                style={{ backgroundColor: colors.surface }}
-              >
-                <Text className="text-4xl">🔥</Text>
-                <Text className="text-3xl font-bold" style={{ color: colors.primary }}>
-                  {streak.currentStreak} day streak
-                </Text>
-                <Text className="text-sm text-muted">
-                  Longest: {streak.longestStreak} days · Total: {streak.totalChallengesCompleted} challenges
-                </Text>
+            {/* Capturable score card */}
+            <View
+              ref={cardRef}
+              collapsable={false}
+              className="w-full items-center gap-4 p-6 rounded-3xl"
+              style={{ backgroundColor: colors.background }}
+            >
+              <Text className="text-6xl">{isPerfect ? "🏆" : score >= 7 ? "🌟" : "✅"}</Text>
+              <Text className="text-2xl font-bold text-foreground text-center">
+                {isPerfect ? "Perfect Score!" : score >= 7 ? "Great Job!" : "Challenge Complete!"}
+              </Text>
+              <Text className="text-4xl font-bold" style={{ color: colors.primary }}>
+                {score} / 10
+              </Text>
+
+              {/* Score bar */}
+              <View style={{ flexDirection: 'row', gap: 4 }}>
+                {Array.from({ length: 10 }, (_, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 4,
+                      backgroundColor: i < score ? colors.success : colors.error,
+                    }}
+                  />
+                ))}
               </View>
-            )}
 
-            {newBadges.length > 0 && (
-              <View className="w-full gap-3">
-                <Text className="text-base font-semibold text-foreground text-center">
-                  🎉 New Badge{newBadges.length > 1 ? "s" : ""} Earned!
-                </Text>
-                {newBadges.map((badge) => {
-                  const info = BADGE_INFO[badge];
-                  if (!info) return null;
-                  return (
-                    <View
-                      key={badge}
-                      className="flex-row items-center gap-3 p-4 rounded-xl"
-                      style={{ backgroundColor: `${colors.primary}20` }}
-                    >
-                      <Text className="text-3xl">{info.emoji}</Text>
-                      <View className="flex-1">
-                        <Text className="text-base font-bold text-foreground">{info.label}</Text>
-                        <Text className="text-sm text-muted">{info.description}</Text>
+              {streak && (
+                <View
+                  className="w-full rounded-2xl p-4 items-center gap-1"
+                  style={{ backgroundColor: colors.surface }}
+                >
+                  <Text className="text-3xl">🔥</Text>
+                  <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
+                    {streak.currentStreak} day streak
+                  </Text>
+                  <Text className="text-sm text-muted">
+                    Longest: {streak.longestStreak} days · Total: {streak.totalChallengesCompleted} challenges
+                  </Text>
+                </View>
+              )}
+
+              {newBadges.length > 0 && (
+                <View className="w-full gap-2">
+                  <Text className="text-sm font-semibold text-foreground text-center">
+                    🎉 New Badge{newBadges.length > 1 ? "s" : ""} Earned!
+                  </Text>
+                  {newBadges.map((badge) => {
+                    const info = BADGE_INFO[badge];
+                    if (!info) return null;
+                    return (
+                      <View
+                        key={badge}
+                        className="flex-row items-center gap-3 p-3 rounded-xl"
+                        style={{ backgroundColor: `${colors.primary}20` }}
+                      >
+                        <Text className="text-2xl">{info.emoji}</Text>
+                        <View className="flex-1">
+                          <Text className="text-sm font-bold text-foreground">{info.label}</Text>
+                          <Text className="text-xs text-muted">{info.description}</Text>
+                        </View>
                       </View>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
+                    );
+                  })}
+                </View>
+              )}
 
+              {/* Branding watermark */}
+              <Text className="text-xs text-muted mt-2">YaYa Math · Daily Challenge</Text>
+            </View>
+
+            {/* Answer review (outside card, not captured) */}
             <View className="w-full gap-2">
               <Text className="text-base font-semibold text-foreground mb-1">Your Answers</Text>
               {challenge.problems.map((p, idx) => (
@@ -303,7 +336,7 @@ export default function DailyChallengeScreen() {
 
             {/* Share button */}
             <TouchableOpacity
-              onPress={() => handleShare(score, streak?.currentStreak ?? 0)}
+              onPress={handleShare}
               disabled={isSharing}
               className="w-full py-4 rounded-2xl items-center"
               style={{

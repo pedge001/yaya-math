@@ -10,6 +10,7 @@ import { useThemeColors, spacing, fontSize, fontWeight } from "@/constants/style
 import { playSound } from "@/lib/sound-manager";
 import { getSubmissionHistory, SubmissionEntry } from "@/lib/submission-history";
 import { getStreakData, getStreakBadge, type StreakData } from "@/lib/streak-tracker";
+import { getStreakState, BADGE_INFO, type DailyStreakState } from "@/lib/daily-challenge";
 import { useAuth } from "@/hooks/use-auth";
 import { startGoogleLogin } from "@/lib/google-auth";
 
@@ -21,6 +22,7 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastPracticeDate: "", longestStreak: 0 });
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [dailyStreak, setDailyStreak] = useState<DailyStreakState | null>(null);
 
   // Load submission history and refresh auth state when screen is focused
   useFocusEffect(
@@ -37,6 +39,8 @@ export default function ProfileScreen() {
     setSubmissions(history);
     const streak = await getStreakData();
     setStreakData(streak);
+    const ds = await getStreakState();
+    setDailyStreak(ds);
     setLoading(false);
   };
 
@@ -343,6 +347,58 @@ export default function ProfileScreen() {
                 </View>
               )}
             />
+          )}
+        </View>
+
+        {/* Badges Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Daily Challenge Badges</Text>
+          <View style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: spacing.sm,
+          }}>
+            {Object.entries(BADGE_INFO).map(([key, info]) => {
+              const earned = dailyStreak?.badges.includes(key) ?? false;
+              return (
+                <View
+                  key={key}
+                  style={{
+                    width: '47%',
+                    backgroundColor: earned ? 'rgba(182, 255, 251, 0.1)' : 'rgba(255,255,255,0.03)',
+                    borderWidth: 1.5,
+                    borderColor: earned ? 'rgba(182, 255, 251, 0.5)' : 'rgba(255,255,255,0.1)',
+                    borderRadius: 12,
+                    padding: spacing.md,
+                    alignItems: 'center',
+                    gap: spacing.xs,
+                    opacity: earned ? 1 : 0.45,
+                  }}
+                >
+                  <Text style={{ fontSize: 32 }}>{earned ? info.emoji : '🔒'}</Text>
+                  <Text style={{
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.bold,
+                    color: earned ? '#B6FFFB' : '#9CA3AF',
+                    textAlign: 'center',
+                  }}>{info.label}</Text>
+                  <Text style={{
+                    fontSize: fontSize.xs,
+                    color: '#9CA3AF',
+                    textAlign: 'center',
+                    lineHeight: 16,
+                  }}>{info.description}</Text>
+                  {earned && (
+                    <Text style={{ fontSize: fontSize.xs, color: colors.success, fontWeight: fontWeight.semibold }}>✓ Earned</Text>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+          {(dailyStreak?.totalChallengesCompleted ?? 0) === 0 && (
+            <Text style={{ fontSize: fontSize.xs, color: '#9CA3AF', textAlign: 'center', marginTop: spacing.sm }}>
+              Complete your first Daily Challenge to start earning badges!
+            </Text>
           )}
         </View>
 
