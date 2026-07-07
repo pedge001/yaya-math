@@ -225,3 +225,4 @@
 - [x] Build daily challenge screen with 10 mixed-operation problems and completion badge
 - [x] Add Daily Challenge entry point on home screen with streak counter display
 - [x] Add share button to Daily Challenge completion screen to share score and streak
+- [x] Add celebratory confetti animation on Daily Challenge completion and new badge earned

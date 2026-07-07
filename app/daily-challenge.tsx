@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
+import { Confetti } from "@/components/confetti";
 import { useColors } from "@/hooks/use-colors";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
@@ -46,6 +47,7 @@ export default function DailyChallengeScreen() {
   const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
   const [newBadges, setNewBadges] = useState<string[]>([]);
   const [isSharing, setIsSharing] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -157,6 +159,8 @@ export default function DailyChallengeScreen() {
     setNewBadges(earned);
     setResults(finalResults);
     setPhase("complete");
+    // Trigger confetti on completion or new badge
+    setShowConfetti(true);
   };
 
   // ── Loading ──────────────────────────────────────────────────────────────
@@ -225,6 +229,7 @@ export default function DailyChallengeScreen() {
     const isPerfect = score === 10;
     return (
       <ScreenContainer className="p-6">
+        <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View className="flex-1 items-center gap-6 pt-8">
             <Text className="text-6xl">{isPerfect ? "🏆" : score >= 7 ? "🌟" : "✅"}</Text>
