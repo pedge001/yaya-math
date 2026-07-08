@@ -9,10 +9,15 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
+      const { default: pg } = await import("pg");
       const dbUrl = process.env.DATABASE_URL;
-      // Append sslmode=require for Railway if not already present
-      const connectionString = dbUrl.includes("sslmode") ? dbUrl : `${dbUrl}${dbUrl.includes("?") ? "&" : "?"}sslmode=require`;
-      _db = drizzle(connectionString);
+      // Strip any existing sslmode param so we control it via the Pool config
+      const cleanUrl = dbUrl.replace(/[?&]sslmode=[^&]*/g, "").replace(/[?&]uselibpqcompat=[^&]*/g, "");
+      const pool = new pg.Pool({
+        connectionString: cleanUrl,
+        ssl: { rejectUnauthorized: false }, // Required for Railway's self-signed cert chain
+      });
+      _db = drizzle(pool);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -141,8 +146,21 @@ export async function addLeaderboardEntry(entry: InsertLeaderboardEntry) {
     await db.insert(leaderboard).values(entry);
     return { success: true };
   } catch (error: any) {
-    console.error("[Database] Failed to add leaderboard entry:", error?.message || error);
-    return { success: false, error: `Failed to add entry: ${error?.message || 'Unknown error'}` };
+    // If the error is a missing column (schema migration hasn't run yet), retry without userId
+    const msg: string = error?.message || '';
+    if (msg.includes('userId') || msg.includes('column')) {
+      console.warn("[Database] Retrying leaderboard insert without userId (migration pending)");
+      try {
+        const { userId: _ignored, ...entryWithoutUserId } = entry as any;
+        await db.insert(leaderboard).values(entryWithoutUserId);
+        return { success: true };
+      } catch (retryError: any) {
+        console.error("[Database] Retry also failed:", retryError?.message || retryError);
+        return { success: false, error: `Failed to add entry: ${retryError?.message || 'Unknown error'}` };
+      }
+    }
+    console.error("[Database] Failed to add leaderboard entry:", msg);
+    return { success: false, error: `Failed to add entry: ${msg || 'Unknown error'}` };
   }
 }
 
@@ -193,8 +211,21 @@ export async function addSpeedLeaderboardEntry(entry: InsertSpeedLeaderboardEntr
     await db.insert(speedLeaderboard).values(entry);
     return { success: true };
   } catch (error: any) {
-    console.error("[Database] Failed to add speed leaderboard entry:", error?.message || error);
-    return { success: false, error: `Failed to add entry: ${error?.message || 'Unknown error'}` };
+    // If the error is a missing column (schema migration hasn't run yet), retry without userId
+    const msg: string = error?.message || '';
+    if (msg.includes('userId') || msg.includes('column')) {
+      console.warn("[Database] Retrying speed leaderboard insert without userId (migration pending)");
+      try {
+        const { userId: _ignored, ...entryWithoutUserId } = entry as any;
+        await db.insert(speedLeaderboard).values(entryWithoutUserId);
+        return { success: true };
+      } catch (retryError: any) {
+        console.error("[Database] Retry also failed:", retryError?.message || retryError);
+        return { success: false, error: `Failed to add entry: ${retryError?.message || 'Unknown error'}` };
+      }
+    }
+    console.error("[Database] Failed to add speed leaderboard entry:", msg);
+    return { success: false, error: `Failed to add entry: ${msg || 'Unknown error'}` };
   }
 }
 
