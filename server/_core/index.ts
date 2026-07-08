@@ -1,4 +1,11 @@
 import "dotenv/config";
+// Polyfill Web Crypto API for Node.js environments where globalThis.crypto is not available
+// Required by jose (JWT library) when built with esbuild --format=esm
+import { webcrypto } from "crypto";
+if (!globalThis.crypto) {
+  (globalThis as Record<string, unknown>).crypto = webcrypto;
+}
+
 import express from "express";
 import { createServer } from "http";
 import net from "net";
