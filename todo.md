@@ -228,3 +228,4 @@
 - [x] Add celebratory confetti animation on Daily Challenge completion and new badge earned
 - [x] Add Badges section to Profile tab showing all 6 badge types with earned/locked states and earned dates
 - [x] Enhance Daily Challenge share button to capture and share a screenshot of the completion screen
+- [ ] REVISIT: Google OAuth Sign-In — button hidden on Profile screen (search GOOGLE_AUTH_HIDDEN). Remaining issue: jose JWT "crypto is not defined" in Railway ESM build. Polyfill added in server/_core/index.ts but needs further testing after next publish.

@@ -448,38 +448,13 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           ) : (
+            // GOOGLE_AUTH_HIDDEN: Google Sign-In temporarily hidden pending OAuth fix.
+            // To re-enable, remove this comment block and restore the Sign-In button below.
+            // See todo.md for details on the jose crypto issue in Railway ESM build.
             <View style={{ gap: spacing.sm }}>
               <Text style={[styles.placeholderText, { color: colors.muted }]}>
-                Sign in to sync your progress across devices
+                Account sync coming soon
               </Text>
-              <TouchableOpacity
-                style={[styles.googleButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                onPress={async () => {
-                  try {
-                    setGoogleLoading(true);
-                    if (Platform.OS !== "web") {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    }
-                    await startGoogleLogin();
-                  } catch (error: any) {
-                    Alert.alert("Login Failed", error.message || "Unable to start Google login");
-                  } finally {
-                    setGoogleLoading(false);
-                  }
-                }}
-                disabled={googleLoading}
-              >
-                {googleLoading ? (
-                  <ActivityIndicator size="small" color={colors.foreground} />
-                ) : (
-                  <>
-                    <Text style={[styles.googleIcon]}>G</Text>
-                    <Text style={[styles.googleButtonText, { color: colors.foreground }]}>
-                      Sign in with Google
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
             </View>
           )}
         </View>
