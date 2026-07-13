@@ -318,7 +318,7 @@ export default function PracticeScreen() {
         setShowingCorrectAnswer(false);
         setCurrentCorrectAnswer(null);
         advanceToNext(isCorrect);
-      }, 1500);
+      }, 2500);
     } else {
       // Normal flow: advance after 600ms
       setTimeout(() => {
