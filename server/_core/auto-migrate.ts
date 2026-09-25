@@ -3,6 +3,109 @@
  * This ensures the deployed Railway server can self-heal its database schema.
  */
 
+/**
+ * A column the application requires, plus any older names the same column may
+ * still be carrying in an existing deployment.
+ */
+type ColumnSpec = {
+  name: string;
+  /** Legacy names for this same column, most likely first. */
+  renameFrom?: string[];
+  /** Expected `information_schema.data_type`; corrected in place if it differs. */
+  type?: string;
+  /** Default expression to restore after a type change. */
+  defaultExpr?: string;
+};
+
+type TableSpec = { table: string; columns: ColumnSpec[] };
+
+/**
+ * `CREATE TABLE IF NOT EXISTS` does nothing when the table already exists with
+ * the wrong shape — it doesn't compare columns. That is how `speed_leaderboard`
+ * sat in production carrying `score` and `operations` while every deploy
+ * cheerfully logged "table ready", and every insert and select against it failed
+ * with `column "completionTime" does not exist`.
+ *
+ * These specs are reconciled against the live columns on every boot, so drift is
+ * either repaired or reported by name instead of surfacing as a raw Postgres
+ * error at request time.
+ */
+const TABLE_SPECS: TableSpec[] = [
+  {
+    table: "speed_leaderboard",
+    columns: [
+      // The live table stored the completion time in a column called "score".
+      { name: "completionTime", renameFrom: ["score", "completiontime"] },
+      { name: "operation", renameFrom: ["operations"] },
+      // Was `date`, which has no time of day — it is the tiebreak for equal
+      // times, so every score set on the same day tied and ordered arbitrarily.
+      { name: "createdAt", type: "timestamp without time zone", defaultExpr: "NOW()" },
+    ],
+  },
+  {
+    table: "leaderboard",
+    columns: [
+      { name: "operation", renameFrom: ["operations"] },
+      { name: "createdAt", type: "timestamp without time zone", defaultExpr: "NOW()" },
+    ],
+  },
+  {
+    table: "daily_challenge_leaderboard",
+    columns: [
+      { name: "createdAt", type: "timestamp without time zone", defaultExpr: "NOW()" },
+    ],
+  },
+];
+
+/**
+ * Brings existing tables in line with `TABLE_SPECS`. Renames preserve data;
+ * nothing here drops a column.
+ *
+ * Every identifier interpolated below comes from the hardcoded specs above,
+ * never from user input.
+ */
+export async function reconcileColumns(client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: Array<Record<string, string>> }> }): Promise<void> {
+  for (const spec of TABLE_SPECS) {
+    const { rows } = await client.query(
+      `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = $1;`,
+      [spec.table]
+    );
+    // Table doesn't exist yet — the CREATE TABLE above already handled it.
+    if (rows.length === 0) continue;
+
+    const columns = new Map(rows.map((row) => [row.column_name, row.data_type]));
+
+    for (const column of spec.columns) {
+      if (!columns.has(column.name)) {
+        const legacy = column.renameFrom?.find((name) => columns.has(name));
+        if (!legacy) {
+          console.error(
+            `[AutoMigrate] ✗ ${spec.table}."${column.name}" is missing and no legacy name matched — queries using it will fail`
+          );
+          continue;
+        }
+        await client.query(`ALTER TABLE "${spec.table}" RENAME COLUMN "${legacy}" TO "${column.name}";`);
+        columns.set(column.name, columns.get(legacy)!);
+        columns.delete(legacy);
+        console.log(`[AutoMigrate] ✓ ${spec.table}: renamed "${legacy}" → "${column.name}"`);
+      }
+
+      if (column.type && columns.get(column.name) !== column.type) {
+        await client.query(
+          `ALTER TABLE "${spec.table}" ALTER COLUMN "${column.name}" TYPE ${column.type} USING "${column.name}"::${column.type};`
+        );
+        if (column.defaultExpr) {
+          await client.query(
+            `ALTER TABLE "${spec.table}" ALTER COLUMN "${column.name}" SET DEFAULT ${column.defaultExpr};`
+          );
+        }
+        columns.set(column.name, column.type);
+        console.log(`[AutoMigrate] ✓ ${spec.table}."${column.name}" → ${column.type}`);
+      }
+    }
+  }
+}
+
 export async function runAutoMigration(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -98,6 +201,11 @@ export async function runAutoMigration(): Promise<void> {
       );
     `);
     console.log("[AutoMigrate] ✓ users table ready");
+
+    // Creating tables is not enough: an existing table with drifted column names
+    // passes CREATE TABLE IF NOT EXISTS untouched.
+    await reconcileColumns(client);
+    console.log("[AutoMigrate] ✓ columns reconciled");
 
     await client.end();
     console.log("[AutoMigrate] All tables verified/created successfully");

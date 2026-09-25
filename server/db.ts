@@ -211,21 +211,16 @@ export async function addSpeedLeaderboardEntry(entry: InsertSpeedLeaderboardEntr
     await db.insert(speedLeaderboard).values(entry);
     return { success: true };
   } catch (error: any) {
-    // If the error is a missing column (schema migration hasn't run yet), retry without userId
-    const msg: string = error?.message || '';
-    if (msg.includes('userId') || msg.includes('column')) {
-      console.warn("[Database] Retrying speed leaderboard insert without userId (migration pending)");
-      try {
-        const { userId: _ignored, ...entryWithoutUserId } = entry as any;
-        await db.insert(speedLeaderboard).values(entryWithoutUserId);
-        return { success: true };
-      } catch (retryError: any) {
-        console.error("[Database] Retry also failed:", retryError?.message || retryError);
-        return { success: false, error: `Failed to add entry: ${retryError?.message || 'Unknown error'}` };
-      }
-    }
-    console.error("[Database] Failed to add speed leaderboard entry:", msg);
-    return { success: false, error: `Failed to add entry: ${msg || 'Unknown error'}` };
+    // There used to be a retry here that claimed to drop userId when a column
+    // was missing. It never worked: userId has always existed on the table, and
+    // the "retry" re-issued an identical statement including that column, so it
+    // failed the same way twice while hiding the real cause — the completionTime
+    // and operation columns were named score and operations. Schema drift is now
+    // repaired at boot by reconcileColumns() in auto-migrate.ts; a failure here
+    // is a genuine failure and should be reported as one.
+    const message: string = error?.message || "Unknown error";
+    console.error("[Database] Failed to add speed leaderboard entry:", message);
+    return { success: false, error: `Failed to add entry: ${message}` };
   }
 }
 
